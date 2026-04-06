@@ -511,6 +511,13 @@ Item {
     if (engineProcess.running) {
       stopRequested = true;
       engineProcess.running = false;
+    } else {
+      stopRequested = false;
+    }
+
+    // Always run terminate command to stop detached processes too.
+    if (!forceStopProcess.running) {
+      forceStopProcess.running = true;
     }
 
     isApplying = false;
@@ -567,6 +574,11 @@ Item {
       pendingCommand = command;
       stopRequested = true;
       engineProcess.running = false;
+
+      // Ensure termination also reaches detached processes before restart.
+      if (!forceStopProcess.running) {
+        forceStopProcess.running = true;
+      }
       return;
     }
 
@@ -668,6 +680,23 @@ Item {
         }
       }
     }
+  }
+
+  Process {
+    id: forceStopProcess
+    running: false
+    command: [
+      "sh",
+      "-c",
+      "if command -v pkill >/dev/null 2>&1; then pkill -x linux-wallpaper >/dev/null 2>&1 || true; pkill -f '(^|/)linux-wallpaperengine([[:space:]]|$)' >/dev/null 2>&1 || true; fi"
+    ]
+
+    onExited: function (exitCode) {
+      Logger.d("LWEController", "Force stop command finished", "exitCode=", exitCode);
+    }
+
+    stdout: StdioCollector {}
+    stderr: StdioCollector {}
   }
 
   IpcHandler {
