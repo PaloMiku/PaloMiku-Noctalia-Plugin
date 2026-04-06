@@ -1,0 +1,92 @@
+name: Validate Manifest
+
+on:
+  pull_request:
+    paths:
+      - "**/manifest.json"
+      - "schema.json"
+  push:
+    branches:
+      - main
+    paths:
+      - "**/manifest.json"
+      - "schema.json"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Validate all manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+
+          const root = process.cwd();
+          const schemaPath = path.join(root, 'schema.json');
+          const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
+          const required = Array.isArray(schema.required) ? schema.required : [];
+
+          const topDirs = fs.readdirSync(root, { withFileTypes: true })
+            .filter(d => d.isDirectory())
+            .map(d => d.name)
+            .filter(name => !name.startsWith('.') && name !== 'node_modules');
+
+          const errors = [];
+
+          for (const dirName of topDirs) {
+            const pluginDir = path.join(root, dirName);
+            const manifestPath = path.join(pluginDir, 'manifest.json');
+            if (!fs.existsSync(manifestPath)) continue;
+
+            let manifest;
+            try {
+              manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+            } catch (err) {
+              errors.push(`${dirName}/manifest.json: invalid JSON (${err.message})`);
+              continue;
+            }
+
+            for (const field of required) {
+              if (!(field in manifest)) {
+                errors.push(`${dirName}/manifest.json: missing required field '${field}'`);
+              }
+            }
+
+            if (manifest.id && manifest.id !== dirName) {
+              errors.push(`${dirName}/manifest.json: id '${manifest.id}' must equal folder name '${dirName}'`);
+            }
+
+            if (!manifest.entryPoints || typeof manifest.entryPoints !== 'object' || Object.keys(manifest.entryPoints).length === 0) {
+              errors.push(`${dirName}/manifest.json: entryPoints must contain at least one entry`);
+            } else {
+              for (const [entry, rel] of Object.entries(manifest.entryPoints)) {
+                if (typeof rel !== 'string' || !rel.trim()) {
+                  errors.push(`${dirName}/manifest.json: entryPoints.${entry} must be a non-empty string`);
+                  continue;
+                }
+                const filePath = path.join(pluginDir, rel);
+                if (!fs.existsSync(filePath)) {
+                  errors.push(`${dirName}/manifest.json: entryPoints.${entry} points to missing file '${rel}'`);
+                }
+              }
+            }
+          }
+
+          if (errors.length > 0) {
+            console.error('Manifest validation failed:');
+            for (const err of errors) console.error(`- ${err}`);
+            process.exit(1);
+          }
+
+          console.log('Manifest validation passed.');
+          NODE

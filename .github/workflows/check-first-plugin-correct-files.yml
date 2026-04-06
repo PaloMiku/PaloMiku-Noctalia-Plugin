@@ -1,0 +1,54 @@
+name: Validate Plugin Structure
+
+on:
+  pull_request:
+    paths:
+      - "**/manifest.json"
+      - "**/README.md"
+      - "**/*.qml"
+  push:
+    branches:
+      - main
+    paths:
+      - "**/manifest.json"
+      - "**/README.md"
+      - "**/*.qml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-plugin-structure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Validate plugin folders
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          failed=0
+          while IFS= read -r manifest; do
+            plugin_dir=$(dirname "$manifest")
+            plugin_name=$(basename "$plugin_dir")
+
+            echo "Checking plugin folder: $plugin_name"
+
+            if [[ ! -f "$plugin_dir/README.md" ]]; then
+              echo "ERROR: $plugin_name is missing README.md"
+              failed=1
+            fi
+
+            if [[ ! -d "$plugin_dir/i18n" ]]; then
+              echo "WARN: $plugin_name does not have an i18n folder"
+            fi
+          done < <(find . -mindepth 2 -maxdepth 2 -type f -name manifest.json | sort)
+
+          if [[ "$failed" -ne 0 ]]; then
+            echo "Plugin structure validation failed"
+            exit 1
+          fi
+
+          echo "Plugin structure validation passed"

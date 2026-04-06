@@ -1,0 +1,37 @@
+{
+  "id": "process-reporter",
+  "name": "Process Reporter",
+  "version": "1.2.7",
+  "minNoctaliaVersion": "4.6.6",
+  "author": "PaloMiku",
+  "official": false,
+  "license": "MIT",
+  "repository": "https://github.com/PaloMiku/noctalia-plugins",
+  "description": "检测当前 Noctalia 聚焦窗口和播放媒体信息并按策略上报云函数，支持 Niri/Hyprland 等窗口管理器",
+  "tags": [
+    "Active"
+  ],
+  "entryPoints": {
+    "main": "Main.qml",
+    "barWidget": "BarWidget.qml",
+    "panel": "Panel.qml",
+    "settings": "Settings.qml"
+  },
+  "dependencies": {
+    "plugins": []
+  },
+  "metadata": {
+    "defaultSettings": {
+      "uploadEnabled": false,
+      "uploadThrottleEnabled": true,
+      "uploadMediaEnabled": false,
+      "uploadWindowTitle": false,
+      "scheduledUploadEnabled": false,
+      "showPluginInfo": false,
+      "scheduledUploadIntervalMs": 5000,
+      "uploadEndpoint": "",
+      "uploadToken": "",
+      "uploadThrottleMs": 15000
+    }
+  }
+}

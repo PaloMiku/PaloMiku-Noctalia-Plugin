@@ -1,0 +1,56 @@
+name: Check Registry Up To Date
+
+on:
+  pull_request:
+    paths:
+      - "**"
+      - "!.github/**"
+      - "!schema.json"
+      - "!registry.json"
+      - "!.gitignore"
+  push:
+    branches:
+      - main
+    paths:
+      - "**"
+      - "!.github/**"
+      - "!schema.json"
+      - "!registry.json"
+      - "!.gitignore"
+
+permissions:
+  contents: read
+
+jobs:
+  check-registry:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Regenerate registry
+        run: node .github/workflows/update-registry.mjs
+
+      - name: Verify registry is committed
+        run: |
+          if [[ -n "$(git status --porcelain -- registry.json)" ]]; then
+            echo "registry.json is out of date. Please run: node .github/workflows/update-registry.mjs"
+            git --no-pager status --short -- registry.json
+            if git ls-files --error-unmatch registry.json >/dev/null 2>&1; then
+              git --no-pager diff -- registry.json
+            fi
+            exit 1
+          fi
+
+          if ! git diff --quiet -- registry.json; then
+            echo "registry.json is out of date. Please run: node .github/workflows/update-registry.mjs"
+            git --no-pager diff -- registry.json
+            exit 1
+          fi

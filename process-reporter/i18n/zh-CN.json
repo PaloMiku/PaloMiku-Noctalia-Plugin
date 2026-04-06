@@ -1,0 +1,124 @@
+{
+  "menu": {
+    "settings": "小组件设置"
+  },
+  "widget": {
+    "tooltip": "窗口: {title}"
+  },
+  "panel": {
+    "title": "Process Reporter",
+    "subtitle": "监控最近聚焦窗口",
+    "refresh-now": "手动刷新并上传",
+    "refresh-triggered": "已请求刷新并上传",
+    "next-refresh": "下次刷新",
+    "seconds-later": " 秒后",
+    "open-settings": "打开插件设置",
+    "copy": "复制",
+    "copy-success": "原始 App ID 已复制",
+    "copy-failed": "复制失败，请确认 wl-copy 可用",
+    "copy-empty": "当前无可复制的原始 App ID",
+    "window": {
+      "title": "窗口标题",
+      "app": "应用 ID",
+      "raw-app": "原始 App ID"
+    },
+    "debug": {
+      "title": "调试与测试",
+      "payload-label": "云函数上报原文（可编辑）",
+      "pause-upload": "暂停上报",
+      "resume-upload": "恢复上报",
+      "pause-enabled": "已暂时暂停自动上报",
+      "pause-disabled": "已恢复自动上报",
+      "reset": "重置为当前快照",
+      "test-upload": "测试上报",
+      "test-success": "测试上报成功",
+      "test-failed": "测试上报失败",
+      "test-idle": "可编辑上方 JSON 后点击“测试上报”",
+      "invalid-json": "JSON 无效，无法发送"
+    },
+    "info": {
+      "title": "插件信息",
+      "id": "插件 ID:",
+      "dir": "插件目录:",
+      "raw-app-id": "原始 App ID:",
+      "ipc": "IPC 命令:"
+    },
+    "last-updated": "最近更新时间",
+    "media-last-updated": "媒体最近更新时间",
+    "upload-state": "上传状态",
+    "media-upload-state": "媒体上传状态",
+    "upload-disabled": "已禁用",
+    "upload-media-disabled": "媒体上报已禁用",
+    "upload-no-endpoint": "未配置上传地址",
+    "upload-no-token": "未配置上传令牌",
+    "upload-no-window": "当前无可上报窗口",
+    "upload-no-media": "当前无可上报媒体",
+    "upload-throttled": "节流中",
+    "upload-paused": "已暂时暂停自动上报",
+    "upload-uploading": "上传中",
+    "upload-success": "上传成功",
+    "upload-failed": "上传失败",
+    "media": {
+      "title": "媒体信息",
+      "no-active": "当前无活跃媒体",
+      "player": "播放器",
+      "track": "曲目",
+      "artist": "艺术家",
+      "album": "专辑",
+      "state": "播放状态",
+      "playing": "播放中",
+      "paused": "已暂停"
+    }
+  },
+  "settings": {
+    "sections": {
+      "basic": "基础功能",
+      "upload": "上报与调试",
+      "debug": "调试设置"
+    },
+    "upload": {
+      "enabled": {
+        "label": "启用上传扩展",
+        "desc": "启用云函数上报（默认不含窗口标题）"
+      },
+      "media-enabled": {
+        "label": "启用媒体信息上报",
+        "desc": "监听 MediaService 并上报播放器、曲目和播放状态"
+      },
+      "window-title": {
+        "label": "上报窗口标题（高隐私风险）",
+        "desc": "窗口标题可能包含聊天、文档、网页等敏感信息，请仅在明确知情且可接受风险时开启"
+      },
+      "scheduled": {
+        "label": "启用定时上报",
+        "desc": "使用定时器进行心跳上报"
+      },
+      "scheduled-interval": {
+        "label": "定时上报间隔（毫秒）",
+        "desc": "最小 1000 毫秒"
+      },
+      "endpoint": {
+        "label": "上传地址",
+        "desc": "云函数 URL（POST JSON）"
+      },
+      "token": {
+        "label": "上传令牌",
+        "desc": "云函数鉴权 Bearer Token"
+      },
+      "throttle": {
+        "label": "上传节流（毫秒）",
+        "desc": "最小 1000 毫秒"
+      },
+      "throttle-enabled": {
+        "label": "启用上传节流",
+        "desc": "开启后按最小时间间隔限制重复上报"
+      }
+    },
+    "debug": {
+      "show-plugin-info": {
+        "label": "显示调试功能",
+        "desc": "在 Panel 中显示调试区（上报原文编辑与测试）"
+      }
+    }
+  }
+}

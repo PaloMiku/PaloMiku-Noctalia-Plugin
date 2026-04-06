@@ -1,0 +1,71 @@
+name: QML Sanity Check
+
+on:
+  pull_request:
+    paths:
+      - "**/*.qml"
+  push:
+    branches:
+      - main
+    paths:
+      - "**/*.qml"
+
+permissions:
+  contents: read
+
+jobs:
+  qml-sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Find QML files
+        id: qml_files
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=$(find . -type f -name "*.qml" | sort)
+          if [[ -z "$files" ]]; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "found=true" >> "$GITHUB_OUTPUT"
+          {
+            echo "files<<EOF"
+            echo "$files"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Basic static checks
+        if: steps.qml_files.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          failed=0
+          while IFS= read -r file; do
+            [[ -z "$file" ]] && continue
+
+            if grep -nE '^(<<<<<<<|=======|>>>>>>>)' "$file" >/dev/null; then
+              echo "ERROR: merge conflict markers found in $file"
+              failed=1
+            fi
+
+            if ! grep -q "import QtQuick" "$file"; then
+              echo "ERROR: missing 'import QtQuick' in $file"
+              failed=1
+            fi
+
+            if grep -n $'\r' "$file" >/dev/null; then
+              echo "ERROR: CRLF line endings found in $file"
+              failed=1
+            fi
+          done <<< "${{ steps.qml_files.outputs.files }}"
+
+          if [[ "$failed" -ne 0 ]]; then
+            echo "QML sanity check failed"
+            exit 1
+          fi
+
+          echo "QML sanity check passed"
