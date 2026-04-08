@@ -1442,14 +1442,16 @@ Item {
                       }
 
                       NSpinBox {
+                        id: wallpaperVolumeSpinBox
                         Layout.fillWidth: true
                         label: pluginApi?.tr("panel.wallpaperVolume")
                         from: 0
                         to: 100
+                        stepSize: 1
                         suffix: pluginApi?.tr("settings.units.percent")
                         value: root.selectedVolume
                         enabled: !root.selectedMuted
-                        onValueChanged: root.selectedVolume = value
+                        onValueChanged: if (value !== root.selectedVolume) root.selectedVolume = value
                       }
 
                       NToggle {
