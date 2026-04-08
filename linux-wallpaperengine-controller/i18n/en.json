@@ -12,6 +12,11 @@
     "stop": "Stop wallpaper engine",
     "settings": "Plugin settings"
   },
+  "toast": {
+    "reloaded": "Wallpaper engine reloaded",
+    "stopped": "Wallpaper engine stopped",
+    "reloadSkippedNoWallpaper": "No wallpaper is configured, so there was nothing to reload"
+  },
   "main": {
     "status": {
       "unavailable": "Engine unavailable",
@@ -29,44 +34,31 @@
     }
   },
   "panel": {
-    "title": "Linux-WallpaperEngine Settings",
-    "sectionInfo": "Information",
-    "sectionAudio": "Audio & Display",
+    "title": "Wallpaper-Engine Wallpaper Selector",
+    "sectionAudio": "Display & Audio",
     "sectionFeatures": "Features",
     "installHint": "Install example: yay -S linux-wallpaperengine-git",
     "errorBannerTitle": "Runtime error detected",
     "errorShowDetails": "View details",
     "errorHideDetails": "Hide details",
     "errorDismiss": "Dismiss",
-    "screen": {
-      "label": "Target screen",
-      "description": "Select the monitor to apply the current wallpaper"
-    },
     "reload": "Reload",
     "stop": "Stop",
     "folderInvalid": "Wallpaper source directory is invalid or inaccessible.",
     "scanning": "Scanning wallpapers...",
     "searchPlaceholder": "Search wallpapers...",
     "searchClear": "Clear search",
-    "filterButton": "Filter",
     "filterButtonSummary": "Filter · {type}",
-    "sortButton": "Sort",
     "sortButtonSummary": "Sort · {direction} {sort}",
     "applyAllDisplays": "Apply to all displays",
-    "perDisplayMode": "Multi-display",
-    "switchToAllDisplays": "Apply on all displays",
-    "switchToPerDisplay": "Apply separately per display",
     "closePanel": "Close panel",
-    "confirmApply": "Confirm apply",
-    "cancelSelection": "Cancel",
-    "pendingHint": "Selected but not applied yet. You can adjust settings before confirming.",
+    "confirmApply": "Apply wallpaper",
     "wallpaperScaling": "Scaling",
     "wallpaperVolume": "Volume",
     "wallpaperMuted": "Mute",
-    "wallpaperAudioReactive": "Audio reactive",
+    "wallpaperAudioReactive": "Audio reactive effects",
     "wallpaperDisableMouse": "Disable mouse interaction",
     "wallpaperDisableParallax": "Disable parallax effect",
-    "resetWallpaperSettings": "Reset to global defaults",
     "infoType": "Type",
     "infoId": "ID",
     "infoResolution": "Resolution",
@@ -77,6 +69,7 @@
     "scalingDefault": "Default",
     "targetAllDisplays": "Target: All displays",
     "targetSingleDisplay": "Target: {screen}",
+    "applySingleDisplay": "Apply to {screen}",
     "filterAll": "All",
     "filterTypeAll": "All",
     "filterTypeScene": "Scene",
@@ -84,6 +77,8 @@
     "filterTypeWeb": "Web",
     "filterTypeApplication": "Application",
     "filterResAll": "Resolution: All",
+    "filterRes4k": "Resolution: 4K",
+    "filterRes8k": "Resolution: 8K",
     "filterResUnknown": "Resolution: Unknown",
     "filterStatic": "Static",
     "filterDynamic": "Dynamic",
@@ -100,9 +95,10 @@
     "typeApplication": "Application",
     "resolutionUnknown": "Unknown",
     "dynamicBadge": "Dynamic",
+    "staticBadge": "Static",
     "count": "Wallpaper count: {count}",
-    "apply": "Apply",
-    "empty": "No folders found in source directory"
+    "emptyAll": "No wallpapers found in the source directory",
+    "emptyFiltered": "No wallpapers match the current filters"
   },
   "settings": {
     "category": {
@@ -110,6 +106,10 @@
       "compatibilityTitle": "Compatibility",
       "audioTitle": "Audio",
       "displayTitle": "Display"
+    },
+    "units": {
+      "fps": " FPS",
+      "percent": " %"
     },
     "wallpapersFolder": {
       "label": "Wallpaper source directory",
@@ -123,7 +123,7 @@
       "placeholder": "~/.local/share/wallpaperengine/assets"
     },
     "defaultScaling": {
-      "label": "Default scaling",
+      "label": "Default scaling mode",
       "description": "Default scaling mode when no custom value is set"
     },
     "defaultFps": {

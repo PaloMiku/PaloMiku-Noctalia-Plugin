@@ -12,6 +12,11 @@
     "stop": "停止壁紙引擎",
     "settings": "外掛設定"
   },
+  "toast": {
+    "reloaded": "壁紙引擎已重新載入",
+    "stopped": "壁紙引擎已停止",
+    "reloadSkippedNoWallpaper": "目前未設定壁紙，因此無需重新載入"
+  },
   "main": {
     "status": {
       "unavailable": "引擎不可用",
@@ -29,44 +34,31 @@
     }
   },
   "panel": {
-    "title": "Linux-WallpaperEngine 設定",
-    "sectionInfo": "資訊",
-    "sectionAudio": "音訊與顯示",
+    "title": "Wallpaper-Engine 壁紙選擇器",
+    "sectionAudio": "顯示與音訊",
     "sectionFeatures": "功能",
     "installHint": "安裝範例：yay -S linux-wallpaperengine-git",
     "errorBannerTitle": "偵測到執行期錯誤",
     "errorShowDetails": "查看詳情",
     "errorHideDetails": "收起詳情",
     "errorDismiss": "關閉提示",
-    "screen": {
-      "label": "目標螢幕",
-      "description": "選擇要套用目前壁紙的顯示器"
-    },
     "reload": "重載",
     "stop": "停止",
     "folderInvalid": "壁紙來源目錄無效或不可存取。",
     "scanning": "正在掃描壁紙...",
     "searchPlaceholder": "搜尋壁紙...",
     "searchClear": "清除搜尋",
-    "filterButton": "篩選",
     "filterButtonSummary": "篩選 · {type}",
-    "sortButton": "排序",
     "sortButtonSummary": "排序 · {direction}{sort}",
     "applyAllDisplays": "套用到全部顯示器",
-    "perDisplayMode": "多顯示器",
-    "switchToAllDisplays": "套用在全部顯示器上",
-    "switchToPerDisplay": "多顯示器分別套用",
     "closePanel": "關閉面板",
-    "confirmApply": "確認套用",
-    "cancelSelection": "取消",
-    "pendingHint": "已選取但尚未套用，可先調整設定後再確認。",
+    "confirmApply": "套用壁紙",
     "wallpaperScaling": "縮放",
     "wallpaperVolume": "音量",
     "wallpaperMuted": "靜音",
-    "wallpaperAudioReactive": "音訊響應",
+    "wallpaperAudioReactive": "音訊響應效果",
     "wallpaperDisableMouse": "停用滑鼠互動",
     "wallpaperDisableParallax": "停用視差效果",
-    "resetWallpaperSettings": "重設為全域預設",
     "infoType": "類型",
     "infoId": "ID",
     "infoResolution": "解析度",
@@ -77,6 +69,7 @@
     "scalingDefault": "預設",
     "targetAllDisplays": "目標：全部顯示器",
     "targetSingleDisplay": "目標：{screen}",
+    "applySingleDisplay": "套用到 {screen}",
     "filterAll": "全部",
     "filterTypeAll": "全部",
     "filterTypeScene": "場景",
@@ -84,6 +77,8 @@
     "filterTypeWeb": "網頁",
     "filterTypeApplication": "應用",
     "filterResAll": "解析度：全部",
+    "filterRes4k": "解析度：4K",
+    "filterRes8k": "解析度：8K",
     "filterResUnknown": "解析度：未知",
     "filterStatic": "靜態",
     "filterDynamic": "動態",
@@ -100,9 +95,10 @@
     "typeApplication": "應用",
     "resolutionUnknown": "未知",
     "dynamicBadge": "動態",
+    "staticBadge": "靜態",
     "count": "壁紙數量：{count}",
-    "apply": "套用",
-    "empty": "來源目錄中找不到任何資料夾"
+    "emptyAll": "來源目錄中找不到任何壁紙",
+    "emptyFiltered": "來源目錄中找不到符合條件的壁紙"
   },
   "settings": {
     "category": {
@@ -110,6 +106,10 @@
       "compatibilityTitle": "相容性",
       "audioTitle": "音訊",
       "displayTitle": "顯示"
+    },
+    "units": {
+      "fps": " FPS",
+      "percent": " %"
     },
     "wallpapersFolder": {
       "label": "壁紙來源目錄",
@@ -123,7 +123,7 @@
       "placeholder": "~/.local/share/wallpaperengine/assets"
     },
     "defaultScaling": {
-      "label": "預設縮放",
+      "label": "預設縮放模式",
       "description": "未設定自訂值時使用的預設縮放模式"
     },
     "defaultFps": {

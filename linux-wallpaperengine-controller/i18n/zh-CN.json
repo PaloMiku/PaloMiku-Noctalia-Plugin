@@ -12,6 +12,11 @@
     "stop": "停止壁纸引擎",
     "settings": "插件设置"
   },
+  "toast": {
+    "reloaded": "壁纸引擎已重新加载",
+    "stopped": "壁纸引擎已停止",
+    "reloadSkippedNoWallpaper": "当前未配置壁纸，因此无需重新加载"
+  },
   "main": {
     "status": {
       "unavailable": "引擎不可用",
@@ -29,44 +34,31 @@
     }
   },
   "panel": {
-    "title": "Linux-WallpaperEngine 设置",
-    "sectionInfo": "信息",
-    "sectionAudio": "音频与显示",
+    "title": "Wallpaper-Engine 壁纸选择器",
+    "sectionAudio": "显示与音频",
     "sectionFeatures": "功能",
     "installHint": "安装示例：yay -S linux-wallpaperengine-git",
     "errorBannerTitle": "检测到运行时错误",
     "errorShowDetails": "查看详情",
     "errorHideDetails": "收起详情",
     "errorDismiss": "关闭提示",
-    "screen": {
-      "label": "目标屏幕",
-      "description": "选择要应用当前壁纸的显示器"
-    },
     "reload": "重载",
     "stop": "停止",
     "folderInvalid": "壁纸源目录无效或不可访问。",
     "scanning": "正在扫描壁纸...",
     "searchPlaceholder": "搜索壁纸...",
     "searchClear": "清空搜索",
-    "filterButton": "筛选",
     "filterButtonSummary": "筛选 · {type}",
-    "sortButton": "排序",
     "sortButtonSummary": "排序 · {direction}{sort}",
     "applyAllDisplays": "应用到全部显示器",
-    "perDisplayMode": "多显示器",
-    "switchToAllDisplays": "应用在全部显示器上",
-    "switchToPerDisplay": "多显示器分别应用",
     "closePanel": "关闭面板",
-    "confirmApply": "确认应用",
-    "cancelSelection": "取消",
-    "pendingHint": "已选中但未应用，可先调整设置后再确认。",
+    "confirmApply": "应用壁纸",
     "wallpaperScaling": "缩放",
     "wallpaperVolume": "音量",
     "wallpaperMuted": "静音",
-    "wallpaperAudioReactive": "音频响应",
+    "wallpaperAudioReactive": "音频响应效果",
     "wallpaperDisableMouse": "禁用鼠标交互",
     "wallpaperDisableParallax": "禁用视差效果",
-    "resetWallpaperSettings": "重置为全局默认",
     "infoType": "类型",
     "infoId": "ID",
     "infoResolution": "分辨率",
@@ -77,6 +69,7 @@
     "scalingDefault": "默认",
     "targetAllDisplays": "目标：全部显示器",
     "targetSingleDisplay": "目标：{screen}",
+    "applySingleDisplay": "应用到 {screen}",
     "filterAll": "全部",
     "filterTypeAll": "全部",
     "filterTypeScene": "场景",
@@ -84,6 +77,8 @@
     "filterTypeWeb": "网页",
     "filterTypeApplication": "应用",
     "filterResAll": "分辨率：全部",
+    "filterRes4k": "分辨率：4K",
+    "filterRes8k": "分辨率：8K",
     "filterResUnknown": "分辨率：未知",
     "filterStatic": "静态",
     "filterDynamic": "动态",
@@ -100,9 +95,10 @@
     "typeApplication": "应用",
     "resolutionUnknown": "未知",
     "dynamicBadge": "动态",
+    "staticBadge": "静态",
     "count": "壁纸数量：{count}",
-    "apply": "应用",
-    "empty": "源目录中未找到任何文件夹"
+    "emptyAll": "源目录中未找到任何壁纸",
+    "emptyFiltered": "源目录中未找到符合条件的壁纸"
   },
   "settings": {
     "category": {
@@ -110,6 +106,10 @@
       "compatibilityTitle": "兼容性",
       "audioTitle": "音频",
       "displayTitle": "显示"
+    },
+    "units": {
+      "fps": " FPS",
+      "percent": " %"
     },
     "wallpapersFolder": {
       "label": "壁纸源目录",
@@ -123,7 +123,7 @@
       "placeholder": "~/.local/share/wallpaperengine/assets"
     },
     "defaultScaling": {
-      "label": "默认缩放",
+      "label": "默认缩放模式",
       "description": "未设置自定义值时的默认缩放模式"
     },
     "defaultFps": {

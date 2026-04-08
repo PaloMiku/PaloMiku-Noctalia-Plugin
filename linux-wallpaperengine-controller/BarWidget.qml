@@ -85,9 +85,9 @@ NIconButton {
       PanelService.closeContextMenu(screen);
 
       if (action === "reload") {
-        mainInstance?.reload();
+        mainInstance?.reload(true);
       } else if (action === "stop") {
-        mainInstance?.stopAll();
+        mainInstance?.stopAll(true);
       } else if (action === "settings") {
         BarService.openPluginSettings(root.screen, pluginApi.manifest);
       }

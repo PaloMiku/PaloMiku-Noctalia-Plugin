@@ -49,7 +49,7 @@ ColumnLayout {
       from: 1
       to: 240
       value: root.editDefaultFps
-      suffix: " FPS"
+      suffix: pluginApi?.tr("settings.units.fps")
       onValueChanged: root.editDefaultFps = value
     }
   }
@@ -138,7 +138,7 @@ ColumnLayout {
     label: pluginApi?.tr("settings.defaultVolume.label")
     from: 0
     to: 100
-    suffix: " %"
+    suffix: pluginApi?.tr("settings.units.percent")
     value: root.editDefaultVolume
     enabled: !root.editDefaultMuted
     onValueChanged: root.editDefaultVolume = value

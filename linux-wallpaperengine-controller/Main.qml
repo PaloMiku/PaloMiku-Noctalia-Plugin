@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 
 import qs.Commons
+import qs.Services.System
 import qs.Services.UI
 
 Item {
@@ -504,7 +505,7 @@ Item {
     return command;
   }
 
-  function stopAll() {
+  function stopAll(showToast = false) {
     Logger.i("LWEController", "Stopping engine process");
     pendingCommand = [];
 
@@ -522,6 +523,9 @@ Item {
 
     isApplying = false;
     statusMessage = pluginApi?.tr("main.status.stopped");
+    if (showToast) {
+      ToastService.showNotice(pluginApi?.tr("panel.title"), pluginApi?.tr("toast.stopped"), "player-stop");
+    }
   }
 
   function startEngineWithCommand(command) {
@@ -585,16 +589,22 @@ Item {
     startEngineWithCommand(command);
   }
 
-  function reload() {
+  function reload(showToast = false) {
     if (!hasAnyConfiguredWallpaper()) {
       lastError = "";
       lastErrorDetails = "";
       statusMessage = pluginApi?.tr("main.status.ready");
       Logger.i("LWEController", "Reload skipped: no configured wallpaper paths");
+      if (showToast) {
+        ToastService.showWarning(pluginApi?.tr("panel.title"), pluginApi?.tr("toast.reloadSkippedNoWallpaper"), "alert-circle");
+      }
       return;
     }
 
     restartEngine();
+    if (showToast) {
+      ToastService.showNotice(pluginApi?.tr("panel.title"), pluginApi?.tr("toast.reloaded"), "refresh");
+    }
   }
 
   Process {

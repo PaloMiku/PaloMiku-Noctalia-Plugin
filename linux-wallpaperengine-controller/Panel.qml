@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import QtMultimedia
 import Quickshell
@@ -42,17 +43,23 @@ Item {
 
   property string searchText: ""
   property string selectedType: "all"
+  property string selectedResolution: "all"
   property string sortMode: "name"
   property bool sortAscending: true
   readonly property bool singleScreenMode: Quickshell.screens.length <= 1
   property bool applyAllDisplays: !singleScreenMode && root._applyAllDisplays
-  property bool _applyAllDisplays: false
+  property bool _applyAllDisplays: true
+  property bool applyTargetExpanded: false
   property bool filterDropdownOpen: false
+  property bool resolutionDropdownOpen: false
   property bool sortDropdownOpen: false
   property bool errorDetailsExpanded: false
   property real filterDropdownX: 0
   property real filterDropdownY: 0
   property real filterDropdownWidth: 220 * Style.uiScaleRatio
+  property real resolutionDropdownX: 0
+  property real resolutionDropdownY: 0
+  property real resolutionDropdownWidth: 220 * Style.uiScaleRatio
   property real sortDropdownX: 0
   property real sortDropdownY: 0
   property real sortDropdownWidth: 220 * Style.uiScaleRatio
@@ -135,8 +142,81 @@ Item {
     return pluginApi?.tr("panel.sortName");
   }
 
+  function resolutionBadgeIcon(value) {
+    const resolution = String(value || "").toLowerCase().trim();
+    if (resolution.length === 0 || resolution === "unknown") {
+      return "";
+    }
+
+    const match = resolution.match(/(\d+)\s*[x×]\s*(\d+)/);
+    if (!match) {
+      return "";
+    }
+
+    const width = Number(match[1]);
+    const height = Number(match[2]);
+    if (isNaN(width) || isNaN(height)) {
+      return "";
+    }
+
+    const longestEdge = Math.max(width, height);
+    if (longestEdge >= 7680) {
+      return "badge-8k";
+    }
+    if (longestEdge >= 3840) {
+      return "badge-4k";
+    }
+    return "";
+  }
+
+  function resolutionBadgeLabel(value) {
+    const icon = resolutionBadgeIcon(value);
+    if (icon === "badge-8k") {
+      return "8K";
+    }
+    if (icon === "badge-4k") {
+      return "4K";
+    }
+    return "";
+  }
+
+  function resolutionFilterKey(value) {
+    const resolution = String(value || "").toLowerCase().trim();
+    if (resolution.length === 0 || resolution === "unknown") {
+      return "unknown";
+    }
+
+    const match = resolution.match(/(\d+)\s*[x×]\s*(\d+)/);
+    if (!match) {
+      return "unknown";
+    }
+
+    const width = Number(match[1]);
+    const height = Number(match[2]);
+    if (isNaN(width) || isNaN(height)) {
+      return "unknown";
+    }
+
+    const longestEdge = Math.max(width, height);
+    if (longestEdge >= 7680) {
+      return "8k";
+    }
+    if (longestEdge >= 3840) {
+      return "4k";
+    }
+    return "other";
+  }
+
+  function resolutionFilterLabel(value) {
+    if (value === "8k") return pluginApi?.tr("panel.filterRes8k");
+    if (value === "4k") return pluginApi?.tr("panel.filterRes4k");
+    if (value === "unknown") return pluginApi?.tr("panel.filterResUnknown");
+    return pluginApi?.tr("panel.filterResAll");
+  }
+
   function closeDropdowns() {
     filterDropdownOpen = false;
+    resolutionDropdownOpen = false;
     sortDropdownOpen = false;
   }
 
@@ -145,6 +225,7 @@ Item {
     filterDropdownX = pos.x;
     filterDropdownY = pos.y;
     filterDropdownWidth = filterButton.width;
+    resolutionDropdownOpen = false;
     sortDropdownOpen = false;
     filterDropdownOpen = true;
   }
@@ -155,12 +236,30 @@ Item {
     sortDropdownY = pos.y;
     sortDropdownWidth = sortButton.width;
     filterDropdownOpen = false;
+    resolutionDropdownOpen = false;
     sortDropdownOpen = true;
+  }
+
+  function openResolutionDropdown() {
+    const pos = resolutionButton.mapToItem(root, 0, resolutionButton.height + Style.marginXS);
+    resolutionDropdownX = pos.x;
+    resolutionDropdownY = pos.y;
+    resolutionDropdownWidth = resolutionButton.width;
+    filterDropdownOpen = false;
+    sortDropdownOpen = false;
+    resolutionDropdownOpen = true;
   }
 
   function applyFilterAction(action) {
     if (String(action).indexOf("type:") === 0) {
       selectedType = String(action).substring(5);
+    }
+    closeDropdowns();
+  }
+
+  function applyResolutionFilterAction(action) {
+    if (String(action).indexOf("res:") === 0) {
+      selectedResolution = String(action).substring(4);
     }
     closeDropdowns();
   }
@@ -271,6 +370,10 @@ Item {
       items = items.filter(item => String(item.type || "unknown").toLowerCase() === selectedType);
     }
 
+    if (selectedResolution !== "all") {
+      items = items.filter(item => resolutionFilterKey(item.resolution) === selectedResolution);
+    }
+
     if (query.length > 0) {
       items = items.filter(item => {
         return String(item.name || "").toLowerCase().indexOf(query) >= 0
@@ -293,7 +396,7 @@ Item {
     }
 
     visibleWallpapers = items;
-    Logger.d("LWEController", "Visible wallpapers refreshed", "count=", visibleWallpapers.length, "type=", selectedType, "sort=", sortMode, "ascending=", sortAscending, "query=", query);
+    Logger.d("LWEController", "Visible wallpapers refreshed", "count=", visibleWallpapers.length, "type=", selectedType, "resolution=", selectedResolution, "sort=", sortMode, "ascending=", sortAscending, "query=", query);
   }
 
   function reconcilePendingSelection() {
@@ -364,6 +467,7 @@ Item {
   }
   onSearchTextChanged: refreshVisibleWallpapers()
   onSelectedTypeChanged: refreshVisibleWallpapers()
+  onSelectedResolutionChanged: refreshVisibleWallpapers()
   onSortModeChanged: refreshVisibleWallpapers()
   onSortAscendingChanged: refreshVisibleWallpapers()
   onSelectedScreenNameChanged: syncSelectionOptionsFromScreen()
@@ -390,6 +494,9 @@ Item {
     if (filterDropdownOpen) {
       openFilterDropdown();
     }
+    if (resolutionDropdownOpen) {
+      openResolutionDropdown();
+    }
     if (sortDropdownOpen) {
       openSortDropdown();
     }
@@ -415,231 +522,249 @@ Item {
       anchors.margins: Style.marginL
       spacing: Style.marginM
 
-        Rectangle {
-          Layout.fillWidth: true
-          Layout.preferredHeight: (root.applyAllDisplays || root.singleScreenMode)
-            ? (56 * Style.uiScaleRatio + 56 * Style.uiScaleRatio + Style.marginS * 4)
-            : (56 * Style.uiScaleRatio + 52 * Style.uiScaleRatio + 56 * Style.uiScaleRatio + Style.marginS * 5)
-          Layout.minimumHeight: Layout.preferredHeight
-          radius: Style.radiusL
-          color: Color.mSurface
-          border.width: Style.borderS
-          border.color: Qt.alpha(Color.mOutline, 0.22)
+      Rectangle {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 56 * Style.uiScaleRatio + 48 * Style.uiScaleRatio + Style.marginS * 4
+        Layout.minimumHeight: Layout.preferredHeight
+        radius: Style.radiusL
+        color: Color.mSurface
+        border.width: Style.borderS
+        border.color: Qt.alpha(Color.mOutline, 0.22)
 
-          ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: Style.marginS
-            spacing: Style.marginS
+        ColumnLayout {
+          anchors.fill: parent
+          anchors.margins: Style.marginS
+          spacing: Style.marginS
 
-            RowLayout {
-              Layout.fillWidth: true
+          RowLayout {
+            Layout.fillWidth: true
 
-              NIcon {
-                icon: "wallpaper-selector"
-                pointSize: Style.fontSizeL
-                color: Color.mOnSurface
-              }
+            NIcon {
+              icon: "wallpaper-selector"
+              pointSize: Style.fontSizeL
+              color: Color.mOnSurface
+            }
 
-              NText {
-                text: pluginApi?.tr("panel.title")
-                font.pointSize: Style.fontSizeL
-                font.weight: Font.Bold
-                color: Color.mOnSurface
-              }
+            NText {
+              text: pluginApi?.tr("panel.title")
+              font.pointSize: Style.fontSizeL
+              font.weight: Font.Bold
+              color: Color.mOnSurface
+            }
 
-              Item { Layout.fillWidth: true }
+            Item { Layout.fillWidth: true }
 
-              NIconButton {
-                enabled: mainInstance?.engineAvailable ?? false
-                icon: "refresh"
-                tooltipText: pluginApi?.tr("panel.reload")
-                onClicked: {
-                  root.scanWallpapers();
-                  if (mainInstance?.hasAnyConfiguredWallpaper()) {
-                    mainInstance?.reload();
-                  } else {
-                    mainInstance.lastError = "";
-                  }
-                }
-              }
-
-              NIconButton {
-                enabled: mainInstance?.engineAvailable ?? false
-                icon: "player-stop"
-                tooltipText: pluginApi?.tr("panel.stop")
-                onClicked: mainInstance?.stopAll()
-              }
-
-              NIconButton {
-                enabled: (mainInstance?.engineAvailable ?? false) && !root.singleScreenMode
-                icon: "device-desktop"
-                tooltipText: root.applyAllDisplays
-                  ? pluginApi?.tr("panel.switchToPerDisplay")
-                  : pluginApi?.tr("panel.switchToAllDisplays")
-                onClicked: root._applyAllDisplays = !root._applyAllDisplays
-              }
-
-              NIconButton {
-                icon: "settings"
-                tooltipText: pluginApi?.tr("menu.settings")
-                onClicked: {
-                  const screen = pluginApi?.panelOpenScreen;
-                  BarService.openPluginSettings(screen, pluginApi?.manifest);
-                  if (pluginApi) {
-                    pluginApi.togglePanel(screen);
-                  }
-                }
-              }
-
-              NIconButton {
-                icon: "x"
-                tooltipText: pluginApi?.tr("panel.closePanel")
-                onClicked: {
-                  const screen = pluginApi?.panelOpenScreen;
-                  if (pluginApi) {
-                    pluginApi.togglePanel(screen);
-                  }
+            NIconButton {
+              enabled: mainInstance?.engineAvailable ?? false
+              icon: "refresh"
+              tooltipText: pluginApi?.tr("panel.reload")
+              onClicked: {
+                root.scanWallpapers();
+                if (mainInstance?.hasAnyConfiguredWallpaper()) {
+                  mainInstance?.reload(true);
+                } else {
+                  mainInstance.lastError = "";
                 }
               }
             }
 
-            RowLayout {
+            NIconButton {
+              enabled: mainInstance?.engineAvailable ?? false
+              icon: "player-stop"
+              tooltipText: pluginApi?.tr("panel.stop")
+              onClicked: mainInstance?.stopAll(true)
+            }
+
+            NIconButton {
+              icon: "settings"
+              tooltipText: pluginApi?.tr("menu.settings")
+              onClicked: {
+                const screen = pluginApi?.panelOpenScreen;
+                BarService.openPluginSettings(screen, pluginApi?.manifest);
+                if (pluginApi) {
+                  pluginApi.togglePanel(screen);
+                }
+              }
+            }
+
+            NIconButton {
+              icon: "x"
+              tooltipText: pluginApi?.tr("panel.closePanel")
+              onClicked: {
+                const screen = pluginApi?.panelOpenScreen;
+                if (pluginApi) {
+                  pluginApi.togglePanel(screen);
+                }
+              }
+            }
+          }
+
+          RowLayout {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 48 * Style.uiScaleRatio
+
+            NTextInput {
+              id: searchInput
               Layout.fillWidth: true
-              Layout.preferredHeight: 52 * Style.uiScaleRatio
-              visible: !root.applyAllDisplays && !root.singleScreenMode
+              placeholderText: pluginApi?.tr("panel.searchPlaceholder")
+              text: root.searchText
+              onTextChanged: root.searchText = text
+            }
 
-              Repeater {
-                model: root.screenModel
+            NIconButton {
+              Layout.alignment: Qt.AlignVCenter
+              visible: root.searchText.length > 0
+              icon: "x"
+              tooltipText: pluginApi?.tr("panel.searchClear")
+              onClicked: root.searchText = ""
+            }
 
-                NButton {
-                  required property var modelData
+            Rectangle {
+              id: resolutionButton
+              Layout.preferredWidth: 172 * Style.uiScaleRatio
+              Layout.maximumWidth: 184 * Style.uiScaleRatio
+              Layout.preferredHeight: 42 * Style.uiScaleRatio
+              radius: Style.radiusL
+              color: Qt.alpha(Color.mSurfaceVariant, 0.42)
+              border.width: Style.borderS
+              border.color: Qt.alpha(Color.mOutline, 0.45)
+
+              RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: Style.marginS
+                anchors.rightMargin: Style.marginS
+                spacing: Style.marginXXS
+
+                NIcon {
+                  icon: "badge-hd"
+                  pointSize: Style.fontSizeM
+                  color: Color.mOnSurface
+                }
+
+                NText {
                   Layout.fillWidth: true
-                  enabled: mainInstance?.engineAvailable ?? false
-                  icon: root.selectedScreenName === modelData.key ? "check" : "device-desktop"
-                  text: modelData.name
-                  onClicked: root.selectedScreenName = modelData.key
+                  text: root.resolutionFilterLabel(root.selectedResolution)
+                  color: Color.mOnSurface
+                  elide: Text.ElideRight
+                }
+
+                NIcon {
+                  icon: "chevron-down"
+                  pointSize: Style.fontSizeM
+                  color: Color.mOnSurfaceVariant
+                }
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                  if (resolutionDropdownOpen) {
+                    root.closeDropdowns();
+                  } else {
+                    root.openResolutionDropdown();
+                  }
                 }
               }
             }
 
-            RowLayout {
-              Layout.fillWidth: true
-              Layout.preferredHeight: 48 * Style.uiScaleRatio
+            Rectangle {
+              id: filterButton
+              Layout.preferredWidth: 172 * Style.uiScaleRatio
+              Layout.maximumWidth: 184 * Style.uiScaleRatio
+              Layout.preferredHeight: 42 * Style.uiScaleRatio
+              radius: Style.radiusL
+              color: Qt.alpha(Color.mSurfaceVariant, 0.42)
+              border.width: Style.borderS
+              border.color: Qt.alpha(Color.mOutline, 0.45)
 
-              NTextInput {
-                id: searchInput
-                Layout.fillWidth: true
-                placeholderText: pluginApi?.tr("panel.searchPlaceholder")
-                text: root.searchText
-                onTextChanged: root.searchText = text
-              }
+              RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: Style.marginS
+                anchors.rightMargin: Style.marginS
+                spacing: Style.marginXXS
 
-              NIconButton {
-                Layout.alignment: Qt.AlignVCenter
-                visible: root.searchText.length > 0
-                icon: "x"
-                tooltipText: pluginApi?.tr("panel.searchClear")
-                onClicked: root.searchText = ""
-              }
-
-              Rectangle {
-                id: filterButton
-                Layout.preferredWidth: 172 * Style.uiScaleRatio
-                Layout.maximumWidth: 184 * Style.uiScaleRatio
-                Layout.preferredHeight: 42 * Style.uiScaleRatio
-                radius: Style.radiusL
-                color: Qt.alpha(Color.mSurfaceVariant, 0.42)
-                border.width: Style.borderS
-                border.color: Qt.alpha(Color.mOutline, 0.45)
-
-                RowLayout {
-                  anchors.fill: parent
-                  anchors.leftMargin: Style.marginS
-                  anchors.rightMargin: Style.marginS
-                  spacing: Style.marginXXS
-
-                  NIcon {
-                    icon: "adjustments-horizontal"
-                    pointSize: Style.fontSizeM
-                    color: Color.mOnSurface
-                  }
-
-                  NText {
-                    Layout.fillWidth: true
-                    text: pluginApi?.tr("panel.filterButtonSummary", { type: root.typeLabel(root.selectedType) })
-                    color: Color.mOnSurface
-                    elide: Text.ElideRight
-                  }
-
-                  NIcon {
-                    icon: "chevron-down"
-                    pointSize: Style.fontSizeM
-                    color: Color.mOnSurfaceVariant
-                  }
+                NIcon {
+                  icon: "adjustments-horizontal"
+                  pointSize: Style.fontSizeM
+                  color: Color.mOnSurface
                 }
 
-                MouseArea {
-                  anchors.fill: parent
-                  onClicked: {
-                    if (filterDropdownOpen) {
-                      root.closeDropdowns();
-                    } else {
-                      root.openFilterDropdown();
-                    }
-                  }
+                NText {
+                  Layout.fillWidth: true
+                  text: pluginApi?.tr("panel.filterButtonSummary", { type: root.typeLabel(root.selectedType) })
+                  color: Color.mOnSurface
+                  elide: Text.ElideRight
+                }
+
+                NIcon {
+                  icon: "chevron-down"
+                  pointSize: Style.fontSizeM
+                  color: Color.mOnSurfaceVariant
                 }
               }
 
-              Rectangle {
-                id: sortButton
-                Layout.preferredWidth: 172 * Style.uiScaleRatio
-                Layout.maximumWidth: 184 * Style.uiScaleRatio
-                Layout.preferredHeight: 42 * Style.uiScaleRatio
-                radius: Style.radiusL
-                color: Qt.alpha(Color.mSurfaceVariant, 0.42)
-                border.width: Style.borderS
-                border.color: Qt.alpha(Color.mOutline, 0.45)
-
-                RowLayout {
-                  anchors.fill: parent
-                  anchors.leftMargin: Style.marginS
-                  anchors.rightMargin: Style.marginS
-                  spacing: Style.marginXXS
-
-                  NIcon {
-                    icon: "arrows-sort"
-                    pointSize: Style.fontSizeM
-                    color: Color.mOnSurface
-                  }
-
-                  NText {
-                    Layout.fillWidth: true
-                    text: pluginApi?.tr("panel.sortButtonSummary", {
-                      direction: root.sortAscending ? "\u2191" : "\u2193",
-                      sort: root.sortLabel(root.sortMode)
-                    })
-                    color: Color.mOnSurface
-                    elide: Text.ElideRight
-                  }
-
-                  NIcon {
-                    icon: "chevron-down"
-                    pointSize: Style.fontSizeM
-                    color: Color.mOnSurfaceVariant
-                  }
-                }
-
-                MouseArea {
-                  anchors.fill: parent
-                  onClicked: {
-                    if (sortDropdownOpen) {
-                      root.closeDropdowns();
-                    } else {
-                      root.openSortDropdown();
-                    }
+              MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                  if (filterDropdownOpen) {
+                    root.closeDropdowns();
+                  } else {
+                    root.openFilterDropdown();
                   }
                 }
               }
+            }
+
+            Rectangle {
+              id: sortButton
+              Layout.preferredWidth: 172 * Style.uiScaleRatio
+              Layout.maximumWidth: 184 * Style.uiScaleRatio
+              Layout.preferredHeight: 42 * Style.uiScaleRatio
+              radius: Style.radiusL
+              color: Qt.alpha(Color.mSurfaceVariant, 0.42)
+              border.width: Style.borderS
+              border.color: Qt.alpha(Color.mOutline, 0.45)
+
+              RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: Style.marginS
+                anchors.rightMargin: Style.marginS
+                spacing: Style.marginXXS
+
+                NIcon {
+                  icon: "arrows-sort"
+                  pointSize: Style.fontSizeM
+                  color: Color.mOnSurface
+                }
+
+                NText {
+                  Layout.fillWidth: true
+                  text: pluginApi?.tr("panel.sortButtonSummary", {
+                    direction: root.sortAscending ? "\u2191" : "\u2193",
+                    sort: root.sortLabel(root.sortMode)
+                  })
+                  color: Color.mOnSurface
+                  elide: Text.ElideRight
+                }
+
+                NIcon {
+                  icon: "chevron-down"
+                  pointSize: Style.fontSizeM
+                  color: Color.mOnSurfaceVariant
+                }
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                  if (sortDropdownOpen) {
+                    root.closeDropdowns();
+                  } else {
+                    root.openSortDropdown();
+                  }
+                }
+              }
+            }
             }
           }
         }
@@ -847,51 +972,111 @@ Item {
                       }
                     }
 
-                    RowLayout {
-                      Layout.fillWidth: true
-                      spacing: Style.marginXS
+                     RowLayout {
+                       Layout.fillWidth: true
+                       spacing: Style.marginXS
+
+                       NText {
+                         Layout.fillWidth: true
+                         text: modelData.name
+                         color: Color.mOnSurface
+                         elide: Text.ElideRight
+                         font.weight: Font.Medium
+                       }
+
+                    NIcon {
+                      visible: root.selectedPath === modelData.path
+                      icon: "check"
+                      pointSize: Style.fontSizeL
+                      color: Color.mPrimary
+                    }
+                  }
+
+                  RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Style.marginXS
+
+                    Rectangle {
+                      color: Qt.alpha(Color.mPrimary, 0.14)
+                      radius: Style.radiusXS
+                      implicitWidth: idBadgeText.implicitWidth + Style.marginS * 2
+                      implicitHeight: idBadgeText.implicitHeight + Style.marginXS * 2
 
                       NText {
-                        Layout.fillWidth: true
-                        text: modelData.name
-                        color: Color.mOnSurface
-                        elide: Text.ElideRight
+                        id: idBadgeText
+                        anchors.centerIn: parent
+                        text: modelData.id
+                        color: Color.mPrimary
+                        elide: Text.ElideMiddle
+                        font.pointSize: Style.fontSizeXS
                         font.weight: Font.Medium
                       }
+                    }
 
-                      NText {
-                        visible: modelData.dynamic
-                        text: pluginApi?.tr("panel.dynamicBadge")
-                        color: Color.mPrimary
-                        font.pointSize: Style.fontSizeS
-                      }
+                    Item { Layout.fillWidth: true }
 
-                      NIcon {
-                        visible: root.selectedPath === modelData.path
-                        icon: "check"
-                        pointSize: Style.fontSizeL
-                        color: Color.mPrimary
+                    Rectangle {
+                      visible: root.resolutionBadgeIcon(modelData.resolution).length > 0
+                      color: Qt.alpha(Color.mSurfaceVariant, 0.24)
+                      radius: Style.radiusXS
+                      implicitWidth: resolutionBadgeRow.implicitWidth + Style.marginS * 2
+                      implicitHeight: resolutionBadgeRow.implicitHeight + Style.marginXS * 2
+
+                      RowLayout {
+                        id: resolutionBadgeRow
+                        anchors.centerIn: parent
+                        spacing: Style.marginXS
+
+                        NIcon {
+                          id: resolutionBadgeIconItem
+                          icon: root.resolutionBadgeIcon(modelData.resolution)
+                          pointSize: Style.fontSizeM
+                          color: Color.mOnSurfaceVariant
+                        }
+
+                        NText {
+                          text: root.resolutionBadgeLabel(modelData.resolution)
+                          color: Color.mOnSurfaceVariant
+                          font.pointSize: Style.fontSizeXS
+                          font.weight: Font.Medium
+                        }
                       }
                     }
 
-                    RowLayout {
-                      Layout.fillWidth: true
-                      spacing: Style.marginXS
+                    Rectangle {
+                      color: Qt.alpha(Color.mSecondary, 0.18)
+                      radius: Style.radiusXS
+                      implicitWidth: typeBadgeText.implicitWidth + Style.marginS * 2
+                      implicitHeight: typeBadgeText.implicitHeight + Style.marginXS * 2
 
                       NText {
-                        Layout.fillWidth: true
-                        text: modelData.id
-                        color: Color.mOnSurfaceVariant
-                        elide: Text.ElideMiddle
-                        font.pointSize: Style.fontSizeS
-                      }
-
-                      NText {
+                        id: typeBadgeText
+                        anchors.centerIn: parent
                         text: root.typeLabel(modelData.type)
-                        color: Color.mOnSurfaceVariant
-                        font.pointSize: Style.fontSizeS
+                        color: Color.mSecondary
+                        font.pointSize: Style.fontSizeXS
+                        font.weight: Font.Medium
                       }
                     }
+
+                    Rectangle {
+                      color: modelData.dynamic ? Qt.alpha(Color.mTertiary, 0.18) : Qt.alpha(Color.mOutline, 0.18)
+                      radius: Style.radiusXS
+                      implicitWidth: motionBadgeText.implicitWidth + Style.marginS * 2
+                      implicitHeight: motionBadgeText.implicitHeight + Style.marginXS * 2
+
+                      NText {
+                        id: motionBadgeText
+                        anchors.centerIn: parent
+                        text: modelData.dynamic
+                          ? pluginApi?.tr("panel.dynamicBadge")
+                          : pluginApi?.tr("panel.staticBadge")
+                        color: modelData.dynamic ? Color.mTertiary : Color.mOnSurfaceVariant
+                        font.pointSize: Style.fontSizeXS
+                        font.weight: Font.Medium
+                      }
+                    }
+                  }
                   }
 
                   MouseArea {
@@ -922,7 +1107,9 @@ Item {
                     }
 
                     NText {
-                      text: pluginApi?.tr("panel.empty")
+                      text: root.wallpaperItems.length === 0
+                        ? pluginApi?.tr("panel.emptyAll")
+                        : pluginApi?.tr("panel.emptyFiltered")
                       color: Color.mOnSurfaceVariant
                     }
                   }
@@ -993,29 +1180,98 @@ Item {
                       elide: Text.ElideRight
                     }
 
-                    NText {
+                    RowLayout {
                       Layout.fillWidth: true
-                      text: root.selectedWallpaperData ? root.selectedWallpaperData.id : ""
-                      color: Color.mOnSurfaceVariant
-                      elide: Text.ElideMiddle
-                      font.pointSize: Style.fontSizeS
-                    }
+                      spacing: Style.marginXS
 
-                    NDivider {
-                      Layout.fillWidth: true
-                      Layout.topMargin: Style.marginM
-                      Layout.bottomMargin: Style.marginM
-                    }
+                      Rectangle {
+                        color: Qt.alpha(Color.mPrimary, 0.14)
+                        radius: Style.radiusXS
+                        implicitWidth: sidebarIdBadgeText.implicitWidth + Style.marginS * 2
+                        implicitHeight: sidebarIdBadgeText.implicitHeight + Style.marginXS * 2
 
-                    NText {
-                      text: pluginApi?.tr("panel.sectionInfo")
-                      color: Color.mOnSurface
-                      font.weight: Font.Bold
-                      font.pointSize: Style.fontSizeM
+                        NText {
+                          id: sidebarIdBadgeText
+                          anchors.centerIn: parent
+                          text: root.selectedWallpaperData ? root.selectedWallpaperData.id : ""
+                          color: Color.mPrimary
+                          font.pointSize: Style.fontSizeXS
+                          font.weight: Font.Medium
+                        }
+                      }
+
+                      Item { Layout.fillWidth: true }
+
+                      Rectangle {
+                        visible: root.selectedWallpaperData && root.resolutionBadgeLabel(root.selectedWallpaperData.resolution).length > 0
+                        color: Qt.alpha(Color.mSurfaceVariant, 0.24)
+                        radius: Style.radiusXS
+                        implicitWidth: sidebarResolutionBadgeRow.implicitWidth + Style.marginS * 2
+                        implicitHeight: sidebarResolutionBadgeRow.implicitHeight + Style.marginXS * 2
+
+                        RowLayout {
+                          id: sidebarResolutionBadgeRow
+                          anchors.centerIn: parent
+                          spacing: Style.marginXS
+
+                          NIcon {
+                            icon: root.selectedWallpaperData ? root.resolutionBadgeIcon(root.selectedWallpaperData.resolution) : ""
+                            pointSize: Style.fontSizeM
+                            color: Color.mOnSurfaceVariant
+                          }
+
+                          NText {
+                            id: sidebarResolutionBadgeText
+                            text: root.selectedWallpaperData ? root.resolutionBadgeLabel(root.selectedWallpaperData.resolution) : ""
+                            color: Color.mOnSurfaceVariant
+                            font.pointSize: Style.fontSizeXS
+                            font.weight: Font.Medium
+                          }
+                        }
+                      }
+
+                      Rectangle {
+                        color: Qt.alpha(Color.mSecondary, 0.18)
+                        radius: Style.radiusXS
+                        implicitWidth: sidebarTypeBadgeText.implicitWidth + Style.marginS * 2
+                        implicitHeight: sidebarTypeBadgeText.implicitHeight + Style.marginXS * 2
+
+                        NText {
+                          id: sidebarTypeBadgeText
+                          anchors.centerIn: parent
+                          text: root.selectedWallpaperData ? root.typeLabel(root.selectedWallpaperData.type) : ""
+                          color: Color.mSecondary
+                          font.pointSize: Style.fontSizeXS
+                          font.weight: Font.Medium
+                        }
+                      }
+
+                      Rectangle {
+                        color: root.selectedWallpaperData && root.selectedWallpaperData.dynamic
+                          ? Qt.alpha(Color.mTertiary, 0.18)
+                          : Qt.alpha(Color.mOutline, 0.18)
+                        radius: Style.radiusXS
+                        implicitWidth: sidebarMotionBadgeText.implicitWidth + Style.marginS * 2
+                        implicitHeight: sidebarMotionBadgeText.implicitHeight + Style.marginXS * 2
+
+                        NText {
+                          id: sidebarMotionBadgeText
+                          anchors.centerIn: parent
+                          text: root.selectedWallpaperData
+                            ? (root.selectedWallpaperData.dynamic
+                              ? pluginApi?.tr("panel.dynamicBadge")
+                              : pluginApi?.tr("panel.staticBadge"))
+                            : ""
+                          color: root.selectedWallpaperData && root.selectedWallpaperData.dynamic ? Color.mTertiary : Color.mOnSurfaceVariant
+                          font.pointSize: Style.fontSizeXS
+                          font.weight: Font.Medium
+                        }
+                      }
                     }
 
                     RowLayout {
                       Layout.fillWidth: true
+                      Layout.topMargin: Style.marginM
 
                       NText {
                         text: pluginApi?.tr("panel.infoType")
@@ -1083,104 +1339,159 @@ Item {
                       }
                     }
 
-                    NDivider {
+                    ColumnLayout {
                       Layout.fillWidth: true
-                      Layout.topMargin: Style.marginM
-                      Layout.bottomMargin: Style.marginM
-                    }
+                      spacing: Style.marginS
 
-                    NText {
-                      text: pluginApi?.tr("panel.sectionAudio")
-                      color: Color.mOnSurface
-                      font.weight: Font.Bold
-                      font.pointSize: Style.fontSizeM
-                    }
+                      RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Style.marginS
 
-                    NComboBox {
-                      Layout.fillWidth: true
-                      label: pluginApi?.tr("panel.wallpaperScaling")
-                      model: [
-                        { "key": "fill", "name": pluginApi?.tr("panel.scalingFill") },
-                        { "key": "fit", "name": pluginApi?.tr("panel.scalingFit") },
-                        { "key": "stretch", "name": pluginApi?.tr("panel.scalingStretch") },
-                        { "key": "default", "name": pluginApi?.tr("panel.scalingDefault") }
-                      ]
-                      currentKey: root.selectedScaling
-                      onSelected: key => root.selectedScaling = key
-                    }
+                        NButton {
+                          Layout.fillWidth: true
+                          text: pluginApi?.tr("panel.confirmApply")
+                          icon: "check"
+                          enabled: (mainInstance?.engineAvailable ?? false) && root.pendingPath.length > 0
+                          onClicked: root.applyPendingSelection()
+                        }
 
-                    NSpinBox {
-                      Layout.fillWidth: true
-                      label: pluginApi?.tr("panel.wallpaperVolume")
-                      from: 0
-                      to: 100
-                      suffix: " %"
-                      value: root.selectedVolume
-                      enabled: !root.selectedMuted
-                      onValueChanged: root.selectedVolume = value
-                    }
+                        NIconButton {
+                          Layout.preferredWidth: 42 * Style.uiScaleRatio
+                          Layout.preferredHeight: 42 * Style.uiScaleRatio
+                          visible: !root.singleScreenMode
+                          enabled: mainInstance?.engineAvailable ?? false
+                          icon: "device-desktop"
+                          tooltipText: root.applyAllDisplays
+                            ? pluginApi?.tr("panel.targetAllDisplays")
+                            : pluginApi?.tr("panel.targetSingleDisplay", { screen: root.selectedScreenName })
+                          onClicked: root.applyTargetExpanded = !root.applyTargetExpanded
+                        }
+                      }
 
-                    NToggle {
-                      Layout.fillWidth: true
-                      label: pluginApi?.tr("panel.wallpaperMuted")
-                      checked: root.selectedMuted
-                      onToggled: checked => root.selectedMuted = checked
-                    }
+                      NBox {
+                        Layout.fillWidth: true
+                        visible: !root.singleScreenMode && root.applyTargetExpanded
+                        Layout.preferredHeight: targetScreenColumn.implicitHeight + Style.marginL * 2
 
-                    NDivider {
-                      Layout.fillWidth: true
-                      Layout.topMargin: Style.marginM
-                      Layout.bottomMargin: Style.marginM
-                    }
+                        ButtonGroup {
+                          id: targetScreenGroup
+                        }
 
-                    NText {
-                      text: pluginApi?.tr("panel.sectionFeatures")
-                      color: Color.mOnSurface
-                      font.weight: Font.Bold
-                      font.pointSize: Style.fontSizeM
-                    }
+                        ColumnLayout {
+                          id: targetScreenColumn
+                          anchors.fill: parent
+                          anchors.margins: Style.marginL
+                          spacing: Style.marginS
 
-                    NToggle {
-                      Layout.fillWidth: true
-                      label: pluginApi?.tr("panel.wallpaperAudioReactive")
-                      checked: root.selectedAudioReactiveEffects
-                      onToggled: checked => root.selectedAudioReactiveEffects = checked
-                    }
+                          NRadioButton {
+                            ButtonGroup.group: targetScreenGroup
+                            Layout.fillWidth: true
+                            enabled: mainInstance?.engineAvailable ?? false
+                            text: pluginApi?.tr("panel.applyAllDisplays")
+                            checked: root.applyAllDisplays
+                            onClicked: {
+                              root._applyAllDisplays = true;
+                              root.applyTargetExpanded = false;
+                            }
+                          }
 
-                    NToggle {
-                      Layout.fillWidth: true
-                      label: pluginApi?.tr("panel.wallpaperDisableMouse")
-                      checked: root.selectedDisableMouse
-                      onToggled: checked => root.selectedDisableMouse = checked
-                    }
+                          Repeater {
+                            model: root.screenModel
 
-                    NToggle {
-                      Layout.fillWidth: true
-                      label: pluginApi?.tr("panel.wallpaperDisableParallax")
-                      checked: root.selectedDisableParallax
-                      onToggled: checked => root.selectedDisableParallax = checked
-                    }
+                            NRadioButton {
+                              ButtonGroup.group: targetScreenGroup
+                              required property var modelData
+                              Layout.fillWidth: true
+                              enabled: mainInstance?.engineAvailable ?? false
+                              text: pluginApi?.tr("panel.applySingleDisplay", { screen: modelData.name })
+                              checked: !root.applyAllDisplays && root.selectedScreenName === modelData.key
+                              onClicked: {
+                                root._applyAllDisplays = false;
+                                root.selectedScreenName = modelData.key;
+                                root.applyTargetExpanded = false;
+                              }
+                            }
+                          }
+                        }
+                      }
 
-                    NText {
-                      Layout.fillWidth: true
-                      text: pluginApi?.tr("panel.pendingHint")
-                      color: Color.mOnSurfaceVariant
-                      wrapMode: Text.Wrap
-                    }
+                      NDivider {
+                        Layout.fillWidth: true
+                        Layout.topMargin: Style.marginM
+                        Layout.bottomMargin: Style.marginM
+                      }
 
-                    NButton {
-                      Layout.fillWidth: true
-                      text: pluginApi?.tr("panel.confirmApply")
-                      icon: "check"
-                      enabled: (mainInstance?.engineAvailable ?? false) && root.pendingPath.length > 0
-                      onClicked: root.applyPendingSelection()
-                    }
+                      NText {
+                        text: pluginApi?.tr("panel.sectionAudio")
+                        color: Color.mOnSurface
+                        font.weight: Font.Bold
+                        font.pointSize: Style.fontSizeM
+                      }
 
-                    NButton {
-                      Layout.fillWidth: true
-                      text: pluginApi?.tr("panel.resetWallpaperSettings")
-                      icon: "refresh"
-                      onClicked: root.resetPendingToGlobalDefaults()
+                      NComboBox {
+                        Layout.fillWidth: true
+                        label: pluginApi?.tr("panel.wallpaperScaling")
+                        model: [
+                          { "key": "fill", "name": pluginApi?.tr("panel.scalingFill") },
+                          { "key": "fit", "name": pluginApi?.tr("panel.scalingFit") },
+                          { "key": "stretch", "name": pluginApi?.tr("panel.scalingStretch") },
+                          { "key": "default", "name": pluginApi?.tr("panel.scalingDefault") }
+                        ]
+                        currentKey: root.selectedScaling
+                        onSelected: key => root.selectedScaling = key
+                      }
+
+                      NSpinBox {
+                        Layout.fillWidth: true
+                        label: pluginApi?.tr("panel.wallpaperVolume")
+                        from: 0
+                        to: 100
+                        suffix: pluginApi?.tr("settings.units.percent")
+                        value: root.selectedVolume
+                        enabled: !root.selectedMuted
+                        onValueChanged: root.selectedVolume = value
+                      }
+
+                      NToggle {
+                        Layout.fillWidth: true
+                        label: pluginApi?.tr("panel.wallpaperMuted")
+                        checked: root.selectedMuted
+                        onToggled: checked => root.selectedMuted = checked
+                      }
+
+                      NDivider {
+                        Layout.fillWidth: true
+                        Layout.topMargin: Style.marginM
+                        Layout.bottomMargin: Style.marginM
+                      }
+
+                      NText {
+                        text: pluginApi?.tr("panel.sectionFeatures")
+                        color: Color.mOnSurface
+                        font.weight: Font.Bold
+                        font.pointSize: Style.fontSizeM
+                      }
+
+                      NToggle {
+                        Layout.fillWidth: true
+                        label: pluginApi?.tr("panel.wallpaperAudioReactive")
+                        checked: root.selectedAudioReactiveEffects
+                        onToggled: checked => root.selectedAudioReactiveEffects = checked
+                      }
+
+                      NToggle {
+                        Layout.fillWidth: true
+                        label: pluginApi?.tr("panel.wallpaperDisableMouse")
+                        checked: root.selectedDisableMouse
+                        onToggled: checked => root.selectedDisableMouse = checked
+                      }
+
+                      NToggle {
+                        Layout.fillWidth: true
+                        label: pluginApi?.tr("panel.wallpaperDisableParallax")
+                        checked: root.selectedDisableParallax
+                        onToggled: checked => root.selectedDisableParallax = checked
+                      }
                     }
                   }
                 }
@@ -1203,21 +1514,73 @@ Item {
           wrapMode: Text.WrapAnywhere
         }
 
-      NText {
-        visible: root.scanningWallpapers
-        text: pluginApi?.tr("panel.scanning")
-        color: Color.mOnSurfaceVariant
+        NText {
+          visible: root.scanningWallpapers
+          text: pluginApi?.tr("panel.scanning")
+          color: Color.mOnSurfaceVariant
+        }
       }
-    }
 
   }
 
   MouseArea {
     anchors.fill: parent
-    visible: root.filterDropdownOpen || root.sortDropdownOpen
+    visible: root.filterDropdownOpen || root.resolutionDropdownOpen || root.sortDropdownOpen
     z: 900
     acceptedButtons: Qt.LeftButton | Qt.RightButton
     onClicked: root.closeDropdowns()
+  }
+
+  Rectangle {
+    visible: root.resolutionDropdownOpen
+    x: root.resolutionDropdownX
+    y: root.resolutionDropdownY
+    width: root.resolutionDropdownWidth
+    height: Math.min(210 * Style.uiScaleRatio, resolutionList.contentHeight + 2 * Style.marginS)
+    radius: Style.radiusL
+    color: Qt.alpha(Color.mSurface, 0.96)
+    border.width: Style.borderS
+    border.color: Qt.alpha(Color.mOutline, 0.45)
+    z: 901
+
+    NListView {
+      id: resolutionList
+      anchors.fill: parent
+      anchors.margins: Style.marginS
+      clip: true
+      spacing: Style.marginXS
+      model: [
+        { "label": pluginApi?.tr("panel.filterResAll"), "action": "res:all", "selected": root.selectedResolution === "all" },
+        { "label": pluginApi?.tr("panel.filterRes4k"), "action": "res:4k", "selected": root.selectedResolution === "4k" },
+        { "label": pluginApi?.tr("panel.filterRes8k"), "action": "res:8k", "selected": root.selectedResolution === "8k" },
+        { "label": pluginApi?.tr("panel.filterResUnknown"), "action": "res:unknown", "selected": root.selectedResolution === "unknown" }
+      ]
+
+      delegate: Rectangle {
+        required property var modelData
+        width: resolutionList.availableWidth
+        height: 34 * Style.uiScaleRatio
+        radius: Style.radiusM
+        color: modelData.selected ? Qt.alpha(Color.mPrimary, 0.22) : "transparent"
+        border.width: modelData.selected ? 1 : 0
+        border.color: Qt.alpha(Color.mPrimary, 0.45)
+
+        NText {
+          anchors.verticalCenter: parent.verticalCenter
+          anchors.left: parent.left
+          anchors.leftMargin: Style.marginS
+          text: modelData.label
+          color: modelData.selected ? Color.mPrimary : Color.mOnSurface
+          font.weight: modelData.selected ? Font.Medium : Font.Normal
+        }
+
+        MouseArea {
+          anchors.fill: parent
+          hoverEnabled: true
+          onClicked: root.applyResolutionFilterAction(modelData.action)
+        }
+      }
+    }
   }
 
   Rectangle {
@@ -1248,7 +1611,7 @@ Item {
 
       delegate: Rectangle {
         required property var modelData
-        width: filterList.width
+        width: filterList.availableWidth
         height: 34 * Style.uiScaleRatio
         radius: Style.radiusM
         color: modelData.selected ? Qt.alpha(Color.mPrimary, 0.22) : "transparent"
@@ -1307,7 +1670,7 @@ Item {
 
       delegate: Rectangle {
         required property var modelData
-        width: sortList.width
+        width: sortList.availableWidth
         height: 34 * Style.uiScaleRatio
         radius: Style.radiusM
         color: modelData.selected ? Qt.alpha(Color.mPrimary, 0.22) : "transparent"
