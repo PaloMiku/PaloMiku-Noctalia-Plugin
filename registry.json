@@ -1,14 +1,14 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-08T13:40:44+08:00",
+  "updatedAt": "2026-04-08T21:18:42+08:00",
   "plugins": [
     {
-      "id": "linux-wallpaperengine-controller-beta",
-      "name": "Linux WallpaperEngine Controller (Beta)",
-      "version": "1.0.6",
+      "id": "linux-wallpaperengine-controller（Beta）",
+      "name": "Linux WallpaperEngine Controller(Beta)",
+      "version": "1.1.0",
       "official": false,
       "author": "PaloMiku",
-      "description": "Control linux-wallpaperengine from Noctalia with per-screen wallpaper selection (Beta).",
+      "description": "Control linux-wallpaperengine from Noctalia with per-screen wallpaper selection（Beta）.",
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "4.6.6",
       "license": "MIT",
@@ -17,7 +17,7 @@
         "Panel",
         "Theming"
       ],
-      "lastUpdated": "2026-04-08T13:40:44+08:00"
+      "lastUpdated": "2026-04-08T21:18:42+08:00"
     },
     {
       "id": "process-reporter",
