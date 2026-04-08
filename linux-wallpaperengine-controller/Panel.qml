@@ -74,10 +74,6 @@ Item {
     return null;
   }
 
-  function shellQuote(value) {
-    return "'" + String(value || "").replace(/'/g, "'\\''") + "'";
-  }
-
   function basename(path) {
     const parts = String(path || "").split("/");
     return parts.length > 0 ? parts[parts.length - 1] : "";
@@ -333,37 +329,11 @@ Item {
 
     Logger.i("LWEController", "Scanning wallpapers", folderPath);
 
-    const quoted = shellQuote(folderPath);
-    const script = "dir=" + quoted + "; [ -d \"$dir\" ] || exit 10; "
-      + "find \"$dir\" -mindepth 1 -maxdepth 1 -type d | sort | while IFS= read -r d; do "
-      + "id=$(basename \"$d\"); "
-      + "name=\"$id\"; dynamic=0; type=unknown; resolution=unknown; "
-      + "if [ -f \"$d/project.json\" ]; then "
-      + "title=$(sed -n 's/^[[:space:]]*\"title\"[[:space:]]*:[[:space:]]*\"\\(.*\\)\".*/\\1/p' \"$d/project.json\" | head -n 1); "
-      + "if [ -n \"$title\" ]; then name=\"$title\"; fi; "
-      + "dtype=$(sed -n 's/^[[:space:]]*\"type\"[[:space:]]*:[[:space:]]*\"\\(.*\\)\".*/\\1/p' \"$d/project.json\" | tail -n 1); "
-      + "if [ -n \"$dtype\" ]; then type=$(printf '%s' \"$dtype\" | tr '[:upper:]' '[:lower:]'); fi; "
-      + "grep -qi '\"type\"[[:space:]]*:[[:space:]]*\"\\(video\\|web\\)\"' \"$d/project.json\" && dynamic=1 || true; "
-      + "res=$(printf '%s' \"$name\" | grep -oE '[0-9]{3,4}x[0-9]{3,4}' | head -n 1); "
-      + "if [ -z \"$res\" ]; then printf '%s' \"$name\" | grep -qi '4k' && res='3840x2160' || true; fi; "
-      + "if [ -z \"$res\" ]; then printf '%s' \"$name\" | grep -qi '2k' && res='2560x1440' || true; fi; "
-      + "if [ -z \"$res\" ]; then printf '%s' \"$name\" | grep -qi '1080p' && res='1920x1080' || true; fi; "
-      + "if [ -z \"$res\" ]; then printf '%s' \"$name\" | grep -qi '720p' && res='1280x720' || true; fi; "
-      + "if [ -n \"$res\" ]; then resolution=\"$res\"; fi; "
-      + "fi; "
-      + "thumb=\"\"; motion=\"\"; "
-      + "for f in preview.jpg preview.png preview.jpeg screenshot.jpg screenshot.png screenshot.jpeg; do "
-      + "if [ -f \"$d/$f\" ]; then thumb=\"$d/$f\"; break; fi; "
-      + "done; "
-      + "for m in preview.gif preview.webm preview.mp4; do "
-      + "if [ -f \"$d/$m\" ]; then motion=\"$d/$m\"; dynamic=1; break; fi; "
-      + "done; "
-      + "bytes=$(du -sb \"$d\" | awk '{print $1}'); mtime=$(stat -c %Y \"$d\"); "
-      + "printf '%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n' \"$d\" \"$name\" \"$thumb\" \"$motion\" \"$dynamic\" \"$id\" \"$type\" \"$resolution\" \"$bytes:$mtime\"; "
-      + "done";
+    const pluginDir = pluginApi?.pluginDir || "";
+    const scriptPath = pluginDir + "/scripts/scan-wallpapers.sh";
 
     scanningWallpapers = true;
-    scanProcess.command = ["sh", "-c", script];
+    scanProcess.command = ["sh", scriptPath, folderPath];
     scanProcess.running = true;
   }
 
@@ -987,33 +957,33 @@ Item {
                       color: Color.mSurfaceVariant
                       clip: true
 
-                    Image {
-                      anchors.fill: parent
-                      visible: root.selectedWallpaperData && (!root.selectedWallpaperData.motionPreview || root.selectedWallpaperData.motionPreview.length === 0) && root.selectedWallpaperData.thumb && root.selectedWallpaperData.thumb.length > 0
-                      source: visible ? ("file://" + root.selectedWallpaperData.thumb) : ""
-                      fillMode: Image.PreserveAspectCrop
-                      cache: false
-                    }
+                      Image {
+                        anchors.fill: parent
+                        visible: root.selectedWallpaperData && (!root.selectedWallpaperData.motionPreview || root.selectedWallpaperData.motionPreview.length === 0) && root.selectedWallpaperData.thumb && root.selectedWallpaperData.thumb.length > 0
+                        source: visible ? ("file://" + root.selectedWallpaperData.thumb) : ""
+                        fillMode: Image.PreserveAspectCrop
+                        cache: false
+                      }
 
-                    AnimatedImage {
-                      anchors.fill: parent
-                      visible: root.selectedWallpaperData && root.selectedWallpaperData.motionPreview && root.selectedWallpaperData.motionPreview.length > 0 && !root.isVideoMotion(root.selectedWallpaperData.motionPreview)
-                      source: visible ? ("file://" + root.selectedWallpaperData.motionPreview) : ""
-                      fillMode: Image.PreserveAspectCrop
-                      cache: false
-                      playing: visible
-                    }
+                      AnimatedImage {
+                        anchors.fill: parent
+                        visible: root.selectedWallpaperData && root.selectedWallpaperData.motionPreview && root.selectedWallpaperData.motionPreview.length > 0 && !root.isVideoMotion(root.selectedWallpaperData.motionPreview)
+                        source: visible ? ("file://" + root.selectedWallpaperData.motionPreview) : ""
+                        fillMode: Image.PreserveAspectCrop
+                        cache: false
+                        playing: visible
+                      }
 
-                    Video {
-                      anchors.fill: parent
-                      visible: root.selectedWallpaperData && root.selectedWallpaperData.motionPreview && root.selectedWallpaperData.motionPreview.length > 0 && root.isVideoMotion(root.selectedWallpaperData.motionPreview)
-                      autoPlay: true
-                      loops: MediaPlayer.Infinite
-                      muted: true
-                      fillMode: VideoOutput.PreserveAspectCrop
-                      source: visible ? ("file://" + root.selectedWallpaperData.motionPreview) : ""
+                      Video {
+                        anchors.fill: parent
+                        visible: root.selectedWallpaperData && root.selectedWallpaperData.motionPreview && root.selectedWallpaperData.motionPreview.length > 0 && root.isVideoMotion(root.selectedWallpaperData.motionPreview)
+                        autoPlay: true
+                        loops: MediaPlayer.Infinite
+                        muted: true
+                        fillMode: VideoOutput.PreserveAspectCrop
+                        source: visible ? ("file://" + root.selectedWallpaperData.motionPreview) : ""
+                      }
                     }
-                  }
 
                     NText {
                       Layout.fillWidth: true
@@ -1031,10 +1001,10 @@ Item {
                       font.pointSize: Style.fontSizeS
                     }
 
-                    Rectangle {
+                    NDivider {
                       Layout.fillWidth: true
-                      Layout.preferredHeight: 1
-                      color: Qt.alpha(Color.mOutline, 0.25)
+                      Layout.topMargin: Style.marginM
+                      Layout.bottomMargin: Style.marginM
                     }
 
                     NText {
@@ -1045,78 +1015,78 @@ Item {
                     }
 
                     RowLayout {
-                    Layout.fillWidth: true
-
-                    NText {
-                      text: pluginApi?.tr("panel.infoType")
-                      color: Color.mOnSurfaceVariant
-                    }
-
-                    Item { Layout.fillWidth: true }
-
-                    NText {
-                      text: root.selectedWallpaperData ? root.typeLabel(root.selectedWallpaperData.type) : ""
-                      color: Color.mOnSurface
-                    }
-                    }
-
-                    RowLayout {
-                    Layout.fillWidth: true
-
-                    NText {
-                      text: pluginApi?.tr("panel.infoId")
-                      color: Color.mOnSurfaceVariant
-                    }
-
-                    Item { Layout.fillWidth: true }
-
-                    NText {
-                      text: root.selectedWallpaperData ? root.selectedWallpaperData.id : ""
-                      color: Color.mOnSurface
-                      elide: Text.ElideMiddle
-                    }
-                    }
-
-                    RowLayout {
-                    Layout.fillWidth: true
-
-                    NText {
-                      text: pluginApi?.tr("panel.infoResolution")
-                      color: Color.mOnSurfaceVariant
-                    }
-
-                    Item { Layout.fillWidth: true }
-
-                    NText {
-                      text: root.selectedWallpaperData
-                        ? (String(root.selectedWallpaperData.resolution || "unknown") === "unknown"
-                          ? pluginApi?.tr("panel.resolutionUnknown")
-                          : root.selectedWallpaperData.resolution)
-                        : ""
-                      color: Color.mOnSurface
-                    }
-                    }
-
-                    RowLayout {
-                    Layout.fillWidth: true
-
-                    NText {
-                      text: pluginApi?.tr("panel.infoSize")
-                      color: Color.mOnSurfaceVariant
-                    }
-
-                    Item { Layout.fillWidth: true }
-
-                    NText {
-                      text: root.selectedWallpaperData ? root.formatBytes(root.selectedWallpaperData.bytes) : ""
-                      color: Color.mOnSurface
-                    }
-                    }
-
-                    Rectangle {
                       Layout.fillWidth: true
-                      Layout.preferredHeight: 1
-                      color: Qt.alpha(Color.mOutline, 0.25)
+
+                      NText {
+                        text: pluginApi?.tr("panel.infoType")
+                        color: Color.mOnSurfaceVariant
+                      }
+
+                      Item { Layout.fillWidth: true }
+
+                      NText {
+                        text: root.selectedWallpaperData ? root.typeLabel(root.selectedWallpaperData.type) : ""
+                        color: Color.mOnSurface
+                      }
+                    }
+
+                    RowLayout {
+                      Layout.fillWidth: true
+
+                      NText {
+                        text: pluginApi?.tr("panel.infoId")
+                        color: Color.mOnSurfaceVariant
+                      }
+
+                      Item { Layout.fillWidth: true }
+
+                      NText {
+                        text: root.selectedWallpaperData ? root.selectedWallpaperData.id : ""
+                        color: Color.mOnSurface
+                        elide: Text.ElideMiddle
+                      }
+                    }
+
+                    RowLayout {
+                      Layout.fillWidth: true
+
+                      NText {
+                        text: pluginApi?.tr("panel.infoResolution")
+                        color: Color.mOnSurfaceVariant
+                      }
+
+                      Item { Layout.fillWidth: true }
+
+                      NText {
+                        text: root.selectedWallpaperData
+                          ? (String(root.selectedWallpaperData.resolution || "unknown") === "unknown"
+                            ? pluginApi?.tr("panel.resolutionUnknown")
+                            : root.selectedWallpaperData.resolution)
+                          : ""
+                        color: Color.mOnSurface
+                      }
+                    }
+
+                    RowLayout {
+                      Layout.fillWidth: true
+
+                      NText {
+                        text: pluginApi?.tr("panel.infoSize")
+                        color: Color.mOnSurfaceVariant
+                      }
+
+                      Item { Layout.fillWidth: true }
+
+                      NText {
+                        text: root.selectedWallpaperData ? root.formatBytes(root.selectedWallpaperData.bytes) : ""
+                        color: Color.mOnSurface
+                      }
+                    }
+
+                    NDivider {
+                      Layout.fillWidth: true
+                      Layout.topMargin: Style.marginM
+                      Layout.bottomMargin: Style.marginM
                     }
 
                     NText {
@@ -1127,40 +1097,40 @@ Item {
                     }
 
                     NComboBox {
-                    Layout.fillWidth: true
-                    label: pluginApi?.tr("panel.wallpaperScaling")
-                    model: [
-                      { "key": "fill", "name": pluginApi?.tr("panel.scalingFill") },
-                      { "key": "fit", "name": pluginApi?.tr("panel.scalingFit") },
-                      { "key": "stretch", "name": pluginApi?.tr("panel.scalingStretch") },
-                      { "key": "default", "name": pluginApi?.tr("panel.scalingDefault") }
-                    ]
-                    currentKey: root.selectedScaling
-                    onSelected: key => root.selectedScaling = key
+                      Layout.fillWidth: true
+                      label: pluginApi?.tr("panel.wallpaperScaling")
+                      model: [
+                        { "key": "fill", "name": pluginApi?.tr("panel.scalingFill") },
+                        { "key": "fit", "name": pluginApi?.tr("panel.scalingFit") },
+                        { "key": "stretch", "name": pluginApi?.tr("panel.scalingStretch") },
+                        { "key": "default", "name": pluginApi?.tr("panel.scalingDefault") }
+                      ]
+                      currentKey: root.selectedScaling
+                      onSelected: key => root.selectedScaling = key
                     }
 
                     NSpinBox {
-                    Layout.fillWidth: true
-                    label: pluginApi?.tr("panel.wallpaperVolume")
-                    from: 0
-                    to: 100
-                    suffix: " %"
-                    value: root.selectedVolume
-                    enabled: !root.selectedMuted
-                    onValueChanged: root.selectedVolume = value
+                      Layout.fillWidth: true
+                      label: pluginApi?.tr("panel.wallpaperVolume")
+                      from: 0
+                      to: 100
+                      suffix: " %"
+                      value: root.selectedVolume
+                      enabled: !root.selectedMuted
+                      onValueChanged: root.selectedVolume = value
                     }
 
                     NToggle {
-                    Layout.fillWidth: true
-                    label: pluginApi?.tr("panel.wallpaperMuted")
-                    checked: root.selectedMuted
-                    onToggled: checked => root.selectedMuted = checked
+                      Layout.fillWidth: true
+                      label: pluginApi?.tr("panel.wallpaperMuted")
+                      checked: root.selectedMuted
+                      onToggled: checked => root.selectedMuted = checked
                     }
 
-                    Rectangle {
+                    NDivider {
                       Layout.fillWidth: true
-                      Layout.preferredHeight: 1
-                      color: Qt.alpha(Color.mOutline, 0.25)
+                      Layout.topMargin: Style.marginM
+                      Layout.bottomMargin: Style.marginM
                     }
 
                     NText {
@@ -1171,31 +1141,31 @@ Item {
                     }
 
                     NToggle {
-                    Layout.fillWidth: true
-                    label: pluginApi?.tr("panel.wallpaperAudioReactive")
-                    checked: root.selectedAudioReactiveEffects
-                    onToggled: checked => root.selectedAudioReactiveEffects = checked
+                      Layout.fillWidth: true
+                      label: pluginApi?.tr("panel.wallpaperAudioReactive")
+                      checked: root.selectedAudioReactiveEffects
+                      onToggled: checked => root.selectedAudioReactiveEffects = checked
                     }
 
                     NToggle {
-                    Layout.fillWidth: true
-                    label: pluginApi?.tr("panel.wallpaperDisableMouse")
-                    checked: root.selectedDisableMouse
-                    onToggled: checked => root.selectedDisableMouse = checked
+                      Layout.fillWidth: true
+                      label: pluginApi?.tr("panel.wallpaperDisableMouse")
+                      checked: root.selectedDisableMouse
+                      onToggled: checked => root.selectedDisableMouse = checked
                     }
 
                     NToggle {
-                    Layout.fillWidth: true
-                    label: pluginApi?.tr("panel.wallpaperDisableParallax")
-                    checked: root.selectedDisableParallax
-                    onToggled: checked => root.selectedDisableParallax = checked
+                      Layout.fillWidth: true
+                      label: pluginApi?.tr("panel.wallpaperDisableParallax")
+                      checked: root.selectedDisableParallax
+                      onToggled: checked => root.selectedDisableParallax = checked
                     }
 
                     NText {
-                    Layout.fillWidth: true
-                    text: pluginApi?.tr("panel.pendingHint")
-                    color: Color.mOnSurfaceVariant
-                    wrapMode: Text.Wrap
+                      Layout.fillWidth: true
+                      text: pluginApi?.tr("panel.pendingHint")
+                      color: Color.mOnSurfaceVariant
+                      wrapMode: Text.Wrap
                     }
 
                     NButton {
@@ -1207,10 +1177,10 @@ Item {
                     }
 
                     NButton {
-                    Layout.fillWidth: true
-                    text: pluginApi?.tr("panel.resetWallpaperSettings")
-                    icon: "refresh"
-                    onClicked: root.resetPendingToGlobalDefaults()
+                      Layout.fillWidth: true
+                      text: pluginApi?.tr("panel.resetWallpaperSettings")
+                      icon: "refresh"
+                      onClicked: root.resetPendingToGlobalDefaults()
                     }
                   }
                 }
@@ -1262,7 +1232,7 @@ Item {
     border.color: Qt.alpha(Color.mOutline, 0.45)
     z: 901
 
-    ListView {
+    NListView {
       id: filterList
       anchors.fill: parent
       anchors.margins: Style.marginS
@@ -1278,7 +1248,7 @@ Item {
 
       delegate: Rectangle {
         required property var modelData
-        width: ListView.view.width
+        width: filterList.width
         height: 34 * Style.uiScaleRatio
         radius: Style.radiusM
         color: modelData.selected ? Qt.alpha(Color.mPrimary, 0.22) : "transparent"
@@ -1315,7 +1285,7 @@ Item {
     border.color: Qt.alpha(Color.mOutline, 0.45)
     z: 901
 
-    ListView {
+    NListView {
       id: sortList
       anchors.fill: parent
       anchors.margins: Style.marginS
@@ -1337,7 +1307,7 @@ Item {
 
       delegate: Rectangle {
         required property var modelData
-        width: ListView.view.width
+        width: sortList.width
         height: 34 * Style.uiScaleRatio
         radius: Style.radiusM
         color: modelData.selected ? Qt.alpha(Color.mPrimary, 0.22) : "transparent"

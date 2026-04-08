@@ -221,10 +221,12 @@ ColumnLayout {
   Process {
     id: scanProcess
     running: false
-    command: [
-      "sh", "-c",
-      "for common in \"$HOME/.steam/steam/steamapps/common\" \"$HOME/.local/share/Steam/steamapps/common\" \"$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common\" \"$HOME/snap/steam/common/.local/share/Steam/steamapps/common\"; do if [ -d \"$common\" ]; then workshop=\"${common%/common}/workshop/content/431960\"; if [ -d \"$workshop\" ]; then printf '%s\\n' \"$workshop\"; exit 0; fi; fi; done; exit 0"
-    ]
+
+    command: {
+      const pluginDir = root.pluginApi?.pluginDir || "";
+      const scriptPath = pluginDir + "/scripts/detect-steam-workshop.sh";
+      return ["sh", scriptPath];
+    }
 
     onExited: function () {
       root.scanning = false;

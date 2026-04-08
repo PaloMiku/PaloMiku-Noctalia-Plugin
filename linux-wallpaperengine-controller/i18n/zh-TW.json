@@ -79,10 +79,10 @@
     "targetSingleDisplay": "目標：{screen}",
     "filterAll": "全部",
     "filterTypeAll": "全部",
-    "filterTypeScene": "Scene",
-    "filterTypeVideo": "Video",
-    "filterTypeWeb": "Web",
-    "filterTypeApplication": "Application",
+    "filterTypeScene": "場景",
+    "filterTypeVideo": "影片",
+    "filterTypeWeb": "網頁",
+    "filterTypeApplication": "應用",
     "filterResAll": "解析度：全部",
     "filterResUnknown": "解析度：未知",
     "filterStatic": "靜態",
@@ -94,10 +94,10 @@
     "sortAscendingToggle": "切換升/降序",
     "sortAscendingToggleWithDirection": "{direction} 切換升/降序",
     "sortId": "ID",
-    "typeScene": "Scene",
-    "typeVideo": "Video",
-    "typeWeb": "Web",
-    "typeApplication": "Application",
+    "typeScene": "場景",
+    "typeVideo": "影片",
+    "typeWeb": "網頁",
+    "typeApplication": "應用",
     "resolutionUnknown": "未知",
     "dynamicBadge": "動態",
     "count": "壁紙數量：{count}",
@@ -112,10 +112,10 @@
       "displayTitle": "顯示"
     },
     "wallpapersFolder": {
-      "label": "壁纸源目錄",
-      "description": "包含壁纸项目资料夹的目錄",
+      "label": "壁紙來源目錄",
+      "description": "包含壁紙項目資料夾的目錄",
       "placeholder": "~/.local/share/Steam/steamapps/workshop/content/431960",
-      "scan": "自动检测 Steam 工作坊目錄"
+      "scan": "自動檢測 Steam 工作坊目錄"
     },
     "assetsDir": {
       "label": "Wallpaper Engine 資源目錄",
