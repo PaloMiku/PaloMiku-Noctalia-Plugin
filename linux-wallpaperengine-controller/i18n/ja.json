@@ -8,7 +8,7 @@
     }
   },
   "menu": {
-    "reload": "壁紙エンジンを再読み込み",
+    "refreshWallpapers": "壁紙一覧を更新",
     "start": "壁紙エンジンを開始",
     "stop": "壁紙エンジンを停止",
     "settings": "プラグイン設定"
@@ -16,7 +16,10 @@
   "toast": {
     "reloaded": "壁紙エンジンを再読み込みしました",
     "stopped": "壁紙エンジンを停止しました",
-    "reloadSkippedNoWallpaper": "壁紙が設定されていないため、再読み込みする内容がありません"
+    "reloadSkippedNoWallpaper": "壁紙が設定されていないため、再読み込みする内容がありません",
+    "refreshingWallpapers": "壁紙一覧を更新中...",
+    "refreshedWallpapers": "壁紙一覧を更新しました：{count} 件",
+    "refreshSkippedNoFolder": "壁紙ソースディレクトリが空のため、壁紙一覧を更新できません"
   },
   "main": {
     "status": {
@@ -48,7 +51,7 @@
     "errorShowDetails": "詳細を表示",
     "errorHideDetails": "詳細を隠す",
     "errorDismiss": "閉じる",
-    "reload": "再読み込み",
+    "refreshWallpapers": "壁紙を更新",
     "start": "開始",
     "stop": "停止",
     "confirm": "確認",
@@ -146,7 +149,8 @@
     },
     "units": {
       "fps": " FPS",
-      "percent": " %"
+      "percent": " %",
+      "minutes": " 分"
     },
     "wallpapersFolder": {
       "label": "壁紙ソースディレクトリ",
@@ -158,6 +162,10 @@
       "label": "Wallpaper Engine 資産ディレクトリ",
       "description": "任意: linux-wallpaperengine が使用する assets パス",
       "placeholder": "~/.local/share/wallpaperengine/assets"
+    },
+    "wallpaperScanCacheMinutes": {
+      "label": "壁紙スキャンキャッシュ時間",
+      "description": "パネルを開くとき、この分数を超えていなければキャッシュ済みの壁紙一覧を再利用します"
     },
     "defaultScaling": {
       "label": "既定の拡大縮小モード",

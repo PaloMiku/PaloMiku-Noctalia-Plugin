@@ -29,6 +29,7 @@ ColumnLayout {
   property bool editDefaultNoFullscreenPause: cfg.defaultNoFullscreenPause ?? defaults.defaultNoFullscreenPause ?? false
   property bool editDefaultFullscreenPauseOnlyActive: cfg.defaultFullscreenPauseOnlyActive ?? defaults.defaultFullscreenPauseOnlyActive ?? false
   property bool editAutoApplyOnStartup: cfg.autoApplyOnStartup ?? defaults.autoApplyOnStartup ?? true
+  property int editWallpaperScanCacheMinutes: cfg.wallpaperScanCacheMinutes ?? defaults.wallpaperScanCacheMinutes ?? 5
   property bool scanning: false
 
   spacing: Style.marginL
@@ -146,6 +147,18 @@ ColumnLayout {
     placeholderText: pluginApi?.tr("settings.assetsDir.placeholder")
     text: root.editAssetsDir
     onTextChanged: root.editAssetsDir = text
+  }
+
+  NSpinBox {
+    Layout.fillWidth: true
+    label: pluginApi?.tr("settings.wallpaperScanCacheMinutes.label")
+    description: pluginApi?.tr("settings.wallpaperScanCacheMinutes.description")
+    from: 0
+    to: 1440
+    stepSize: 1
+    value: root.editWallpaperScanCacheMinutes
+    suffix: pluginApi?.tr("settings.units.minutes")
+    onValueChanged: if (value !== root.editWallpaperScanCacheMinutes) root.editWallpaperScanCacheMinutes = value
   }
 
   NDivider {
@@ -273,13 +286,17 @@ ColumnLayout {
     pluginApi.pluginSettings.defaultNoFullscreenPause = root.editDefaultNoFullscreenPause;
     pluginApi.pluginSettings.defaultFullscreenPauseOnlyActive = root.editDefaultFullscreenPauseOnlyActive;
     pluginApi.pluginSettings.autoApplyOnStartup = root.editAutoApplyOnStartup;
+    pluginApi.pluginSettings.wallpaperScanCacheMinutes = root.editWallpaperScanCacheMinutes;
 
     pluginApi.saveSettings();
-    Logger.d("LWEController", "Settings saved", "wallpapersFolder=", root.editWallpapersFolder, "assetsDir=", root.editAssetsDir, "defaultScaling=", root.editDefaultScaling, "defaultClamp=", root.editDefaultClamp, "defaultFps=", defaultFpsSpinBox.value, "defaultVolume=", defaultVolumeSpinBox.value, "defaultMuted=", root.editDefaultMuted, "defaultAudioReactiveEffects=", root.editDefaultAudioReactiveEffects, "defaultNoAutomute=", root.editDefaultNoAutomute, "defaultDisableMouse=", root.editDefaultDisableMouse, "defaultDisableParallax=", root.editDefaultDisableParallax, "defaultNoFullscreenPause=", root.editDefaultNoFullscreenPause, "defaultFullscreenPauseOnlyActive=", root.editDefaultFullscreenPauseOnlyActive, "autoApplyOnStartup=", root.editAutoApplyOnStartup);
+    Logger.d("LWEController", "Settings saved", "wallpapersFolder=", root.editWallpapersFolder, "assetsDir=", root.editAssetsDir, "defaultScaling=", root.editDefaultScaling, "defaultClamp=", root.editDefaultClamp, "defaultFps=", defaultFpsSpinBox.value, "defaultVolume=", defaultVolumeSpinBox.value, "defaultMuted=", root.editDefaultMuted, "defaultAudioReactiveEffects=", root.editDefaultAudioReactiveEffects, "defaultNoAutomute=", root.editDefaultNoAutomute, "defaultDisableMouse=", root.editDefaultDisableMouse, "defaultDisableParallax=", root.editDefaultDisableParallax, "defaultNoFullscreenPause=", root.editDefaultNoFullscreenPause, "defaultFullscreenPauseOnlyActive=", root.editDefaultFullscreenPauseOnlyActive, "autoApplyOnStartup=", root.editAutoApplyOnStartup, "wallpaperScanCacheMinutes=", root.editWallpaperScanCacheMinutes);
 
-    if (pluginApi.mainInstance && pluginApi.mainInstance.engineAvailable) {
-      Logger.d("LWEController", "Triggering engine reload after settings save");
-      pluginApi.mainInstance.reload();
+    if (pluginApi.mainInstance) {
+      Logger.d("LWEController", "Refreshing wallpaper cache and reloading engine after settings save");
+      pluginApi.mainInstance.refreshWallpaperCache(true, false);
+      if (pluginApi.mainInstance.hasAnyConfiguredWallpaper()) {
+        pluginApi.mainInstance.reload();
+      }
     }
   }
 
@@ -290,7 +307,7 @@ ColumnLayout {
     command: {
       const pluginDir = root.pluginApi?.pluginDir || "";
       const scriptPath = pluginDir + "/scripts/detect-steam-workshop.sh";
-      return ["sh", scriptPath];
+      return ["bash", scriptPath];
     }
 
     onExited: function () {

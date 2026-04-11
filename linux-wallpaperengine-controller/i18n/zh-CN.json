@@ -8,7 +8,7 @@
     }
   },
   "menu": {
-    "reload": "重新加载壁纸引擎",
+    "refreshWallpapers": "刷新壁纸列表",
     "start": "启动壁纸引擎",
     "stop": "停止壁纸引擎",
     "settings": "插件设置"
@@ -16,7 +16,10 @@
   "toast": {
     "reloaded": "壁纸引擎已重新加载",
     "stopped": "壁纸引擎已停止",
-    "reloadSkippedNoWallpaper": "当前未配置壁纸，因此无需重新加载"
+    "reloadSkippedNoWallpaper": "当前未配置壁纸，因此无需重新加载",
+    "refreshingWallpapers": "正在刷新壁纸列表...",
+    "refreshedWallpapers": "壁纸列表已刷新：共 {count} 个壁纸",
+    "refreshSkippedNoFolder": "壁纸源目录为空，因此无法刷新壁纸列表"
   },
   "main": {
     "status": {
@@ -48,7 +51,7 @@
     "errorShowDetails": "查看详情",
     "errorHideDetails": "收起详情",
     "errorDismiss": "关闭提示",
-    "reload": "重载",
+    "refreshWallpapers": "刷新壁纸",
     "start": "启动",
     "stop": "停止",
     "confirm": "确认",
@@ -146,7 +149,8 @@
     },
     "units": {
       "fps": " FPS",
-      "percent": " %"
+      "percent": " %",
+      "minutes": " 分钟"
     },
     "wallpapersFolder": {
       "label": "壁纸源目录",
@@ -158,6 +162,10 @@
       "label": "Wallpaper Engine 资源目录",
       "description": "可选：linux-wallpaperengine 使用的 assets 路径",
       "placeholder": "~/.local/share/wallpaperengine/assets"
+    },
+    "wallpaperScanCacheMinutes": {
+      "label": "壁纸扫描缓存时长",
+      "description": "打开面板时，若未超过该分钟数则复用缓存的壁纸列表而不重新扫描"
     },
     "defaultScaling": {
       "label": "默认缩放模式",

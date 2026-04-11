@@ -8,7 +8,7 @@
     }
   },
   "menu": {
-    "reload": "Перезагрузить движок обоев",
+    "refreshWallpapers": "Обновить список обоев",
     "start": "Запустить движок обоев",
     "stop": "Остановить движок обоев",
     "settings": "Настройки плагина"
@@ -16,7 +16,10 @@
   "toast": {
     "reloaded": "Движок обоев перезагружен",
     "stopped": "Движок обоев остановлен",
-    "reloadSkippedNoWallpaper": "Обои не настроены, поэтому перезагружать нечего"
+    "reloadSkippedNoWallpaper": "Обои не настроены, поэтому перезагружать нечего",
+    "refreshingWallpapers": "Обновление списка обоев...",
+    "refreshedWallpapers": "Список обоев обновлён: {count}",
+    "refreshSkippedNoFolder": "Каталог источника обоев пуст, поэтому список обоев нельзя обновить"
   },
   "main": {
     "status": {
@@ -48,7 +51,7 @@
     "errorShowDetails": "Показать подробности",
     "errorHideDetails": "Скрыть подробности",
     "errorDismiss": "Закрыть",
-    "reload": "Перезагрузить",
+    "refreshWallpapers": "Обновить обои",
     "start": "Запустить",
     "stop": "Остановить",
     "confirm": "Подтвердить",
@@ -146,7 +149,8 @@
     },
     "units": {
       "fps": " FPS",
-      "percent": " %"
+      "percent": " %",
+      "minutes": " мин"
     },
     "wallpapersFolder": {
       "label": "Каталог источника обоев",
@@ -158,6 +162,10 @@
       "label": "Каталог ресурсов Wallpaper Engine",
       "description": "Необязательно: путь к assets, используемый linux-wallpaperengine",
       "placeholder": "~/.local/share/wallpaperengine/assets"
+    },
+    "wallpaperScanCacheMinutes": {
+      "label": "Время кэша сканирования обоев",
+      "description": "При открытии панели повторно использовать кэшированный список обоев, если он не старше указанного количества минут"
     },
     "defaultScaling": {
       "label": "Режим масштабирования по умолчанию",
