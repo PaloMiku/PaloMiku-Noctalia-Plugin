@@ -40,6 +40,7 @@ Item {
   readonly property string activeColorMonitor: String(Settings.data.colorSchemes.monitorForColors || Quickshell.screens[0]?.name || "")
   readonly property bool wallpaperColorsEnabled: !!Settings.data.colorSchemes.useWallpaperColors
   readonly property bool wallpaperColorDarkMode: !!Settings.data.colorSchemes.darkMode
+  readonly property string wallpaperColorGenerationMethod: String(Settings.data.colorSchemes.generationMethod || "")
 
   property var pendingCommand: []
 
@@ -361,6 +362,18 @@ Item {
     for (const screen of Quickshell.screens) {
       clearLegacyScreenRuntimeOptions(screen.name);
     }
+  }
+
+  function currentWallpaperColorMode() {
+    return Settings.data.colorSchemes.darkMode ? "dark" : "light";
+  }
+
+  function applyWallpaperColorsFromScreenshot(screenshotPath) {
+    if (String(screenshotPath || "").trim().length === 0) {
+      return;
+    }
+
+    TemplateProcessor.processWallpaperColors(screenshotPath, currentWallpaperColorMode());
   }
 
   function screenshotPathForWallpaper(path, screenName = "") {
@@ -1206,7 +1219,7 @@ Item {
       saveWallpaperColorScreenshot(screenName, screenshotPath, requestPath, root.wallpaperColorScaling);
 
       if (wallpaperColorsEnabled && screenName === activeColorMonitor) {
-        TemplateProcessor.processWallpaperColors(screenshotPath, Settings.data.colorSchemes.darkMode ? "dark" : "light");
+        root.applyWallpaperColorsFromScreenshot(screenshotPath);
         Logger.i("LWEController", "Wallpaper screenshot generated and applied for active color monitor", "path=", requestPath, "screen=", screenName, "screenshot=", screenshotPath);
         ToastService.showNotice(pluginApi?.tr("panel.title"), pluginApi?.tr("toast.wallpaperColorsApplied"), "palette");
         return;
@@ -1232,7 +1245,7 @@ Item {
         Logger.i("LWEController", "Reusing cached wallpaper color screenshot", "path=", request.wallpaperPath, "screen=", request.screenName, "scaling=", request.scaling, "screenshot=", request.screenshotPath);
 
         if (root.wallpaperColorsEnabled && request.screenName === root.activeColorMonitor) {
-          TemplateProcessor.processWallpaperColors(request.screenshotPath, Settings.data.colorSchemes.darkMode ? "dark" : "light");
+          root.applyWallpaperColorsFromScreenshot(request.screenshotPath);
           ToastService.showNotice(pluginApi?.tr("panel.title"), pluginApi?.tr("toast.wallpaperColorsApplied"), "palette");
         } else {
           ToastService.showNotice(pluginApi?.tr("panel.title"), pluginApi?.tr("toast.wallpaperColorsCached"), "palette");
@@ -1297,7 +1310,7 @@ Item {
         return;
       }
       Logger.i("LWEController", "Applying cached wallpaper colors for active monitor", "screen=", screenName || root.activeColorMonitor, "path=", screenshotPath);
-      TemplateProcessor.processWallpaperColors(screenshotPath, Settings.data.colorSchemes.darkMode ? "dark" : "light");
+      root.applyWallpaperColorsFromScreenshot(screenshotPath);
     }
   }
 
@@ -1355,6 +1368,7 @@ Item {
   onActiveColorMonitorChanged: scheduleCachedWallpaperColorsForMonitor("monitor-changed")
   onWallpaperColorsEnabledChanged: scheduleCachedWallpaperColorsForMonitor("wallpaper-colors-toggled")
   onWallpaperColorDarkModeChanged: scheduleCachedWallpaperColorsForMonitor("dark-mode-changed")
+  onWallpaperColorGenerationMethodChanged: scheduleCachedWallpaperColorsForMonitor("generation-method-changed")
 
   Timer {
     id: stableRunTimer
