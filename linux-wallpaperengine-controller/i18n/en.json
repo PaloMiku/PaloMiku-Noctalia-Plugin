@@ -19,7 +19,13 @@
     "reloadSkippedNoWallpaper": "No wallpaper is configured, so there was nothing to reload",
     "refreshingWallpapers": "Refreshing wallpaper list...",
     "refreshedWallpapers": "Wallpaper list refreshed: {count} wallpapers",
-    "refreshSkippedNoFolder": "Wallpaper source directory is empty, so the wallpaper list could not be refreshed"
+    "refreshSkippedNoFolder": "Wallpaper source directory is empty, so the wallpaper list could not be refreshed",
+    "wallpaperColorsGenerating": "Generating wallpaper screenshot for color extraction...",
+    "wallpaperColorsApplied": "Wallpaper colors applied to Noctalia",
+    "wallpaperColorsCached": "Wallpaper colors cached for this display",
+    "wallpaperColorsFailed": "Failed to extract colors from the selected wallpaper",
+    "wallpaperColorsNoSelection": "Select a wallpaper first before applying wallpaper colors",
+    "wallpaperColorsEngineUnavailable": "linux-wallpaperengine must be available to generate wallpaper colors"
   },
   "main": {
     "status": {
@@ -69,6 +75,7 @@
     "applyAllDisplays": "Apply to all displays",
     "closePanel": "Close panel",
     "confirmApply": "Apply wallpaper",
+    "syncWallpaperColors": "Sync wallpaper colors",
     "wallpaperScaling": "Scaling",
     "wallpaperClamp": "Clamp mode",
     "wallpaperVolume": "Volume",
@@ -146,6 +153,12 @@
     "enableExtraPropertiesEditor": {
       "label": "Enable extra property editor",
       "description": "Show wallpaper-specific extra properties in the panel sidebar when available"
+    },
+    "cache": {
+      "currentSize": "Current color image cache size: {size}",
+      "refresh": "Refresh color cache size",
+      "clear": "Clear color image cache",
+      "sizeUnknown": "Unknown"
     },
     "units": {
       "fps": " FPS",

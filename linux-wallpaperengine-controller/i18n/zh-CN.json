@@ -19,7 +19,13 @@
     "reloadSkippedNoWallpaper": "当前未配置壁纸，因此无需重新加载",
     "refreshingWallpapers": "正在刷新壁纸列表...",
     "refreshedWallpapers": "壁纸列表已刷新：共 {count} 个壁纸",
-    "refreshSkippedNoFolder": "壁纸源目录为空，因此无法刷新壁纸列表"
+    "refreshSkippedNoFolder": "壁纸源目录为空，因此无法刷新壁纸列表",
+    "wallpaperColorsGenerating": "正在生成用于取色的壁纸截图...",
+    "wallpaperColorsApplied": "已将壁纸颜色应用到 Noctalia",
+    "wallpaperColorsCached": "已为此显示器缓存壁纸颜色",
+    "wallpaperColorsFailed": "无法从所选壁纸中提取颜色",
+    "wallpaperColorsNoSelection": "请先选择壁纸，再应用壁纸颜色",
+    "wallpaperColorsEngineUnavailable": "需要可用的 linux-wallpaperengine 才能生成壁纸颜色"
   },
   "main": {
     "status": {
@@ -69,6 +75,7 @@
     "applyAllDisplays": "应用到全部显示器",
     "closePanel": "关闭面板",
     "confirmApply": "应用壁纸",
+    "syncWallpaperColors": "同步壁纸颜色",
     "wallpaperScaling": "缩放",
     "wallpaperClamp": "边界模式",
     "wallpaperVolume": "音量",
@@ -146,6 +153,12 @@
     "enableExtraPropertiesEditor": {
       "label": "启用额外属性编辑器",
       "description": "在可用时于面板侧栏显示壁纸专属的额外属性"
+    },
+    "cache": {
+      "currentSize": "当前配色图片缓存大小：{size}",
+      "refresh": "刷新配色缓存大小",
+      "clear": "清除配色图片缓存",
+      "sizeUnknown": "未知"
     },
     "units": {
       "fps": " FPS",

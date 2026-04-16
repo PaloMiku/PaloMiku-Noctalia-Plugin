@@ -36,6 +36,8 @@
       "defaultNoAutomute": false,
       "defaultDisableMouse": false,
       "defaultDisableParallax": false,
+      "applyWallpaperColorsOnApply": false,
+      "wallpaperColorScreenshots": {},
       "defaultNoFullscreenPause": false,
       "defaultFullscreenPauseOnlyActive": false,
       "autoApplyOnStartup": true,

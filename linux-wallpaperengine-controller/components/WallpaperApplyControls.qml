@@ -23,6 +23,8 @@ ColumnLayout {
   property bool selectedAudioReactiveEffects: true
   property bool selectedDisableMouse: false
   property bool selectedDisableParallax: false
+  property bool applyWallpaperColorsOnApply: false
+  property bool applyingWallpaperColors: false
   property bool extraPropertiesEditorEnabled: true
   property bool loadingWallpaperProperties: false
   property string wallpaperPropertyError: ""
@@ -46,6 +48,7 @@ ColumnLayout {
   signal selectedAudioReactiveEffectsRequested(bool value)
   signal selectedDisableMouseRequested(bool value)
   signal selectedDisableParallaxRequested(bool value)
+  signal applyWallpaperColorsOnApplyRequested(bool value)
 
   Layout.fillWidth: true
   spacing: Style.marginS
@@ -211,6 +214,16 @@ ColumnLayout {
     label: pluginApi?.tr("panel.wallpaperDisableParallax")
     checked: root.selectedDisableParallax
     onToggled: checked => root.selectedDisableParallaxRequested(checked)
+  }
+
+  NToggle {
+    Layout.fillWidth: true
+    label: pluginApi?.tr("panel.syncWallpaperColors")
+    checked: root.applyWallpaperColorsOnApply
+    enabled: (root.mainInstance?.engineAvailable ?? false)
+      && !!root.selectedWallpaperData
+      && !root.applyingWallpaperColors
+    onToggled: checked => root.applyWallpaperColorsOnApplyRequested(checked)
   }
 
   ColumnLayout {

@@ -1,6 +1,9 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Io
+
+import "helpers/ColorCacheHelpers.js" as ColorCacheHelpers
 
 import qs.Commons
 import qs.Widgets
@@ -31,8 +34,39 @@ ColumnLayout {
   property bool editAutoApplyOnStartup: cfg.autoApplyOnStartup ?? defaults.autoApplyOnStartup ?? true
   property int editWallpaperScanCacheMinutes: cfg.wallpaperScanCacheMinutes ?? defaults.wallpaperScanCacheMinutes ?? 5
   property bool scanning: false
+  property bool refreshingCacheSize: false
+  property bool clearingCache: false
+  property string cacheSizeLabel: pluginApi?.tr("settings.cache.sizeUnknown")
+  readonly property string pluginCacheDir: Settings.cacheDir + "linux-wallpaperengine-controller"
 
   spacing: Style.marginL
+
+  function refreshCacheSize() {
+    if (root.refreshingCacheSize) {
+      return;
+    }
+
+    root.refreshingCacheSize = true;
+    cacheSizeProcess.running = true;
+  }
+
+  function formatBytes(bytes) {
+    return ColorCacheHelpers.formatBytes(bytes, pluginApi?.tr("settings.cache.sizeUnknown"));
+  }
+
+  function preservedWallpaperColorScreenshots() {
+    return ColorCacheHelpers.preservedEntriesForScreens(
+      pluginApi?.pluginSettings?.wallpaperColorScreenshots,
+      Quickshell.screens
+    );
+  }
+
+  function clearCacheCommand() {
+    const preserved = root.preservedWallpaperColorScreenshots();
+    return ColorCacheHelpers.clearCacheCommand(root.pluginApi?.pluginDir || "", root.pluginCacheDir, preserved);
+  }
+
+  Component.onCompleted: refreshCacheSize()
 
   NText {
     Layout.fillWidth: true
@@ -159,6 +193,38 @@ ColumnLayout {
     value: root.editWallpaperScanCacheMinutes
     suffix: pluginApi?.tr("settings.units.minutes")
     onValueChanged: if (value !== root.editWallpaperScanCacheMinutes) root.editWallpaperScanCacheMinutes = value
+  }
+
+  NText {
+    Layout.fillWidth: true
+    text: pluginApi?.tr("settings.cache.currentSize", { size: root.cacheSizeLabel })
+    color: Color.mOnSurfaceVariant
+    wrapMode: Text.Wrap
+  }
+
+  ColumnLayout {
+    Layout.fillWidth: true
+    spacing: Style.marginS
+
+    NButton {
+      Layout.fillWidth: true
+      text: pluginApi?.tr("settings.cache.refresh")
+      icon: root.refreshingCacheSize ? "loader" : "refresh"
+      enabled: !root.refreshingCacheSize && !root.clearingCache
+      onClicked: root.refreshCacheSize()
+    }
+
+    NButton {
+      Layout.fillWidth: true
+      text: pluginApi?.tr("settings.cache.clear")
+      icon: root.clearingCache ? "loader" : "trash"
+      enabled: !root.clearingCache && !root.refreshingCacheSize
+      onClicked: {
+        root.clearingCache = true;
+        clearCacheProcess.command = root.clearCacheCommand();
+        clearCacheProcess.running = true;
+      }
+    }
   }
 
   NDivider {
@@ -316,6 +382,59 @@ ColumnLayout {
       if (detected.length > 0 && root.editWallpapersFolder.length === 0) {
         root.editWallpapersFolder = detected;
       }
+    }
+
+    stdout: StdioCollector {}
+    stderr: StdioCollector {}
+  }
+
+  Process {
+    id: cacheSizeProcess
+    running: false
+    command: {
+      const pluginDir = root.pluginApi?.pluginDir || "";
+      const scriptPath = pluginDir + "/scripts/get-cache-size-bytes.sh";
+      return ["bash", scriptPath, root.pluginCacheDir];
+    }
+
+    onExited: function (exitCode) {
+      root.refreshingCacheSize = false;
+
+      if (exitCode !== 0) {
+        const errorOutput = String(stderr.text || "").trim();
+        if (errorOutput.length > 0) {
+          console.warn("Failed to get cache size:", errorOutput);
+        }
+        root.cacheSizeLabel = pluginApi?.tr("settings.cache.sizeUnknown");
+        return;
+      }
+
+      const output = String(stdout.text || "").trim();
+      const bytes = Number(output);
+      if (output.length === 0 || isNaN(bytes) || bytes < 0) {
+        root.cacheSizeLabel = pluginApi?.tr("settings.cache.sizeUnknown");
+        return;
+      }
+
+      root.cacheSizeLabel = root.formatBytes(bytes);
+    }
+
+    stdout: StdioCollector {}
+    stderr: StdioCollector {}
+  }
+
+  Process {
+    id: clearCacheProcess
+    running: false
+    command: root.clearCacheCommand()
+
+    onExited: function () {
+      root.clearingCache = false;
+      if (pluginApi) {
+        pluginApi.pluginSettings.wallpaperColorScreenshots = root.preservedWallpaperColorScreenshots();
+        pluginApi.saveSettings();
+      }
+      root.refreshCacheSize();
     }
 
     stdout: StdioCollector {}

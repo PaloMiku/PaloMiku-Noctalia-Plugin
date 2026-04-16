@@ -71,7 +71,7 @@ ColumnLayout {
       spacing: Style.marginXS
 
       property bool boolValue: !!(root.propertyValueFor ? root.propertyValueFor(modelData) : false)
-      property real sliderValue: root.numberOr ? root.numberOr(root.propertyValueFor(modelData), 0) : 0
+      property real sliderValue: root.numberOr ? root.numberOr(root.propertyValueFor ? root.propertyValueFor(modelData) : 0, 0) : 0
       property string comboValue: String(root.propertyValueFor ? root.propertyValueFor(modelData) : "")
       property string textValue: String(root.propertyValueFor ? root.propertyValueFor(modelData) : "")
       property color colorValue: Qt.rgba(1, 1, 1, 1)

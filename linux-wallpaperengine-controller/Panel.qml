@@ -10,6 +10,8 @@ import qs.Services.UI
 import qs.Widgets
 
 import "components"
+import "helpers/WallpaperMetaHelpers.js" as WallpaperMetaHelpers
+import "helpers/PropertyHelpers.js" as PropertyHelpers
 
 Item {
   id: root
@@ -43,6 +45,8 @@ Item {
   property bool selectedAudioReactiveEffects: true
   property bool selectedDisableMouse: false
   property bool selectedDisableParallax: false
+  property bool applyWallpaperColorsOnApply: cfg.applyWallpaperColorsOnApply ?? defaults.applyWallpaperColorsOnApply ?? false
+  readonly property bool applyingWallpaperColors: mainInstance?.applyingWallpaperColors ?? false
   readonly property bool scanningWallpapers: mainInstance?.scanningWallpapers ?? false
   property bool loadingWallpaperProperties: false
   property bool scanningCompatibility: false
@@ -136,27 +140,19 @@ Item {
 
   // Basic file and metadata helpers.
   function basename(path) {
-    const parts = String(path || "").split("/");
-    return parts.length > 0 ? parts[parts.length - 1] : "";
+    return WallpaperMetaHelpers.basename(path);
   }
 
   function workshopUrlForWallpaper(item) {
-    const wallpaperId = String(item?.id || "").trim();
-    if (!/^\d+$/.test(wallpaperId)) {
-      return "";
-    }
-    return "https://steamcommunity.com/sharedfiles/filedetails/?id=" + wallpaperId;
+    return WallpaperMetaHelpers.workshopUrlForWallpaper(item);
   }
 
   function fileExt(path) {
-    const raw = basename(path);
-    const idx = raw.lastIndexOf(".");
-    return idx >= 0 ? raw.substring(idx + 1).toLowerCase() : "";
+    return WallpaperMetaHelpers.fileExt(path);
   }
 
   function isVideoMotion(path) {
-    const ext = fileExt(path);
-    return ext === "mp4" || ext === "webm" || ext === "mov" || ext === "mkv";
+    return WallpaperMetaHelpers.isVideoMotion(path);
   }
 
   function typeLabel(value) {
@@ -169,24 +165,7 @@ Item {
   }
 
   function formatBytes(bytesValue) {
-    const size = Number(bytesValue || 0);
-    if (isNaN(size) || size <= 0) {
-      return "0 B";
-    }
-
-    if (size < 1024) {
-      return Math.floor(size) + " B";
-    }
-
-    if (size < 1024 * 1024) {
-      return (size / 1024).toFixed(1) + " KB";
-    }
-
-    if (size < 1024 * 1024 * 1024) {
-      return (size / (1024 * 1024)).toFixed(1) + " MB";
-    }
-
-    return (size / (1024 * 1024 * 1024)).toFixed(1) + " GB";
+    return WallpaperMetaHelpers.formatBytes(bytesValue);
   }
 
   function sortLabel(value) {
@@ -198,68 +177,15 @@ Item {
 
   // Resolution helpers for badges and filtering.
   function resolutionBadgeIcon(value) {
-    const resolution = String(value || "").toLowerCase().trim();
-    if (resolution.length === 0 || resolution === "unknown") {
-      return "";
-    }
-
-    const match = resolution.match(/(\d+)\s*[x×]\s*(\d+)/);
-    if (!match) {
-      return "";
-    }
-
-    const width = Number(match[1]);
-    const height = Number(match[2]);
-    if (isNaN(width) || isNaN(height)) {
-      return "";
-    }
-
-    const longestEdge = Math.max(width, height);
-    if (longestEdge >= 7680) {
-      return "badge-8k";
-    }
-    if (longestEdge >= 3840) {
-      return "badge-4k";
-    }
-    return "";
+    return WallpaperMetaHelpers.resolutionBadgeIcon(value);
   }
 
   function resolutionBadgeLabel(value) {
-    const icon = resolutionBadgeIcon(value);
-    if (icon === "badge-8k") {
-      return "8K";
-    }
-    if (icon === "badge-4k") {
-      return "4K";
-    }
-    return "";
+    return WallpaperMetaHelpers.resolutionBadgeLabel(value);
   }
 
   function resolutionFilterKey(value) {
-    const resolution = String(value || "").toLowerCase().trim();
-    if (resolution.length === 0 || resolution === "unknown") {
-      return "unknown";
-    }
-
-    const match = resolution.match(/(\d+)\s*[x×]\s*(\d+)/);
-    if (!match) {
-      return "unknown";
-    }
-
-    const width = Number(match[1]);
-    const height = Number(match[2]);
-    if (isNaN(width) || isNaN(height)) {
-      return "unknown";
-    }
-
-    const longestEdge = Math.max(width, height);
-    if (longestEdge >= 7680) {
-      return "8k";
-    }
-    if (longestEdge >= 3840) {
-      return "4k";
-    }
-    return "other";
+    return WallpaperMetaHelpers.resolutionFilterKey(value);
   }
 
   function resolutionFilterLabel(value) {
@@ -271,134 +197,31 @@ Item {
 
   // Extra property parsing and normalization helpers.
   function stripHtml(rawText) {
-    return String(rawText || "")
-      .replace(/<[^>]*>/g, " ")
-      .replace(/&nbsp;?/gi, " ")
-      .replace(/&amp;/gi, "&")
-      .replace(/&lt;/gi, "<")
-      .replace(/&gt;/gi, ">")
-      .replace(/\s+/g, " ")
-      .trim();
+    return PropertyHelpers.stripHtml(rawText);
   }
 
   function cleanedPropertyLabel(rawText, fallbackKey) {
-    const stripped = stripHtml(rawText)
-      .replace(/^[\-–—•·*_#\s]+/, "")
-      .replace(/^[^\p{L}\p{N}]+/u, "")
-      .trim();
-    if (stripped.length > 0) {
-      return normalizePropertyLabel(stripped);
-    }
-    return normalizePropertyLabel(String(fallbackKey || ""));
+    return PropertyHelpers.cleanedPropertyLabel(rawText, fallbackKey, key => pluginApi?.tr(key));
   }
 
   function normalizePropertyLabel(value) {
-    const raw = String(value || "").trim();
-    if (raw.length === 0) {
-      return "";
-    }
-
-    const looksLikeKey = /^[a-z0-9_]+$/i.test(raw) && raw.indexOf("_") >= 0;
-    if (!looksLikeKey) {
-      return raw;
-    }
-
-    const normalizedKey = raw
-      .replace(/^ui_browse_properties_/i, "")
-      .replace(/^ui_/i, "")
-      .replace(/^properties_/i, "");
-
-    const propertyLabelKey = {
-      "scheme_color": "panel.propertyLabelThemeColor"
-    }[normalizedKey.toLowerCase()];
-
-    if (propertyLabelKey) {
-      return pluginApi?.tr(propertyLabelKey);
-    }
-
-    return normalizedKey
-      .split("_")
-      .filter(part => part.length > 0)
-      .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-      .join(" ");
+    return PropertyHelpers.normalizePropertyLabel(value, key => pluginApi?.tr(key));
   }
 
   function isNoisePropertyKey(value) {
-    const key = String(value || "").toLowerCase().trim();
-    if (key.length === 0) {
-      return true;
-    }
-    return key.indexOf("imgsrc") === 0
-      || key.indexOf("brahref") === 0
-      || key.indexOf("centerbrahref") === 0
-      || key.indexOf("bigweixin") === 0
-      || key.indexOf("viewer_4") >= 0
-      || key.indexOf("photogz") >= 0
-      || key.indexOf("mqpic") >= 0
-      || key.indexOf("width") >= 0 && key.indexOf("height") >= 0;
+    return PropertyHelpers.isNoisePropertyKey(value);
   }
 
   function isNoisePropertyLabel(value) {
-    const label = String(value || "").toLowerCase().trim();
-    if (label.length === 0) {
-      return true;
-    }
-    return label.indexOf("imgsrc") >= 0
-      || label.indexOf("photogz") >= 0
-      || label.indexOf("mqpic") >= 0
-      || label.indexOf("viewer_4") >= 0;
+    return PropertyHelpers.isNoisePropertyLabel(value);
   }
 
   function parsePropertyValue(rawValue, type) {
-    const trimmed = String(rawValue || "").trim();
-    if (type === "boolean") {
-      return trimmed === "1";
-    }
-    if (type === "slider") {
-      const parsed = Number(trimmed);
-      return isNaN(parsed) ? 0 : parsed;
-    }
-    if (type === "combo") {
-      return String(trimmed);
-    }
-    if (type === "textinput") {
-      return trimmed.replace(/^"|"$/g, "");
-    }
-    if (type === "color") {
-      const parts = trimmed.split(",").map(part => Number(String(part).trim()));
-      if (parts.length >= 3 && parts.every(part => !isNaN(part))) {
-        const maxChannel = Math.max(parts[0], parts[1], parts[2]);
-        if (maxChannel > 1) {
-          return Qt.rgba(parts[0] / 255, parts[1] / 255, parts[2] / 255, 1);
-        }
-        return Qt.rgba(parts[0], parts[1], parts[2], 1);
-      }
-      return Qt.rgba(1, 1, 1, 1);
-    }
-    return trimmed;
+    return PropertyHelpers.parsePropertyValue(rawValue, type, (r, g, b, a) => Qt.rgba(r, g, b, a));
   }
 
   function serializePropertyValue(value, type) {
-    if (type === "boolean") {
-      return value ? "1" : "0";
-    }
-    if (type === "slider") {
-      return String(value);
-    }
-    if (type === "combo") {
-      return String(value);
-    }
-    if (type === "textinput") {
-      return String(value);
-    }
-    if (type === "color") {
-      const color = value;
-      const r = Math.round((color?.r ?? 1) * 255);
-      const g = Math.round((color?.g ?? 1) * 255);
-      const b = Math.round((color?.b ?? 1) * 255);
-      return String(r) + "," + String(g) + "," + String(b);
-    }
-    return String(value);
+    return PropertyHelpers.serializePropertyValue(value, type);
   }
 
   // Extra property value accessors.
@@ -415,50 +238,23 @@ Item {
   }
 
   function comboChoicesFor(definition) {
-    const rawChoices = definition?.choices || [];
-    const normalized = [];
-    for (const choice of rawChoices) {
-      const key = String(choice?.key ?? choice?.value ?? "").trim();
-      const name = String(choice?.name ?? choice?.label ?? choice?.text ?? key).trim();
-      if (key.length === 0) {
-        continue;
-      }
-      normalized.push({ key: key, name: name.length > 0 ? name : key });
-    }
-    return normalized;
+    return PropertyHelpers.comboChoicesFor(definition);
   }
 
   function ensureColorValue(value) {
-    if (value === undefined || value === null || value === "") {
-      return Qt.rgba(1, 1, 1, 1);
-    }
-    if (typeof value === "string") {
-      return parsePropertyValue(value, "color");
-    }
-    if (value.r !== undefined && value.g !== undefined && value.b !== undefined) {
-      return Qt.rgba(value.r, value.g, value.b, value.a !== undefined ? value.a : 1);
-    }
-    return Qt.rgba(1, 1, 1, 1);
+    return PropertyHelpers.ensureColorValue(
+      value,
+      (rawValue, type) => parsePropertyValue(rawValue, type),
+      (r, g, b, a) => Qt.rgba(r, g, b, a)
+    );
   }
 
   function numberOr(value, fallback) {
-    const parsed = Number(value);
-    return isNaN(parsed) ? fallback : parsed;
+    return PropertyHelpers.numberOr(value, fallback);
   }
 
   function formatSliderValue(value, step) {
-    const numericValue = numberOr(value, 0);
-    const numericStep = Math.max(numberOr(step, 1), 0.001);
-    let decimals = 0;
-    if (numericStep < 1) {
-      const stepText = String(numericStep);
-      if (stepText.indexOf("e-") >= 0) {
-        decimals = Number(stepText.split("e-")[1]) || 0;
-      } else if (stepText.indexOf(".") >= 0) {
-        decimals = stepText.split(".")[1].length;
-      }
-    }
-    return numericValue.toFixed(Math.min(decimals, 6));
+    return PropertyHelpers.formatSliderValue(value, step);
   }
 
   function setPropertyValue(key, value) {
@@ -804,6 +600,15 @@ Item {
       return;
     }
 
+    const configuredColorScreen = String(Settings.data.colorSchemes.monitorForColors || "").trim();
+    const colorApplyScreen = applyAllDisplays
+      ? (configuredColorScreen || Quickshell.screens[0]?.name || "")
+      : (root.singleScreenMode ? (Quickshell.screens[0]?.name || "") : (selectedScreenName || Quickshell.screens[0]?.name || ""));
+    const colorApplyOptions = {
+      "screenName": colorApplyScreen,
+      "scaling": selectedScaling
+    };
+
     const options = { "scaling": selectedScaling, "clamp": selectedClamp };
     options.volume = selectedVolume;
     options.muted = selectedMuted;
@@ -825,6 +630,9 @@ Item {
     if (applyAllDisplays) {
       Logger.i("LWEController", "Confirm apply to all displays", path, JSON.stringify(options));
       mainInstance?.setAllScreensWallpaperWithOptions(path, options);
+      if (applyWallpaperColorsOnApply) {
+        mainInstance?.scheduleWallpaperColorsFromPath(path, colorApplyOptions);
+      }
       pendingPath = "";
       return;
     }
@@ -837,6 +645,9 @@ Item {
     const targetScreen = root.singleScreenMode ? (Quickshell.screens[0]?.name || "") : selectedScreenName;
     Logger.i("LWEController", "Confirm apply to screen", targetScreen, path, JSON.stringify(options));
     mainInstance?.setScreenWallpaperWithOptions(targetScreen, path, options);
+    if (applyWallpaperColorsOnApply) {
+      mainInstance?.scheduleWallpaperColorsFromPath(path, colorApplyOptions);
+    }
     pendingPath = "";
   }
 
@@ -1188,6 +999,8 @@ Item {
               selectedAudioReactiveEffects: root.selectedAudioReactiveEffects
               selectedDisableMouse: root.selectedDisableMouse
               selectedDisableParallax: root.selectedDisableParallax
+              applyWallpaperColorsOnApply: root.applyWallpaperColorsOnApply
+              applyingWallpaperColors: root.applyingWallpaperColors
               extraPropertiesEditorEnabled: root.extraPropertiesEditorEnabled
               loadingWallpaperProperties: root.loadingWallpaperProperties
               wallpaperPropertyError: root.wallpaperPropertyError
@@ -1216,6 +1029,13 @@ Item {
               onSelectedAudioReactiveEffectsRequested: value => root.selectedAudioReactiveEffects = value
               onSelectedDisableMouseRequested: value => root.selectedDisableMouse = value
               onSelectedDisableParallaxRequested: value => root.selectedDisableParallax = value
+              onApplyWallpaperColorsOnApplyRequested: value => {
+                root.applyWallpaperColorsOnApply = value;
+                if (pluginApi) {
+                  pluginApi.pluginSettings.applyWallpaperColorsOnApply = value;
+                  pluginApi.saveSettings();
+                }
+              }
               onWorkshopLinkRequested: workshopUrl => {
                 if (workshopUrl.length === 0) {
                   return;

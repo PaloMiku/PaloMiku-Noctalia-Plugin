@@ -27,6 +27,8 @@ ColumnLayout {
   property bool selectedAudioReactiveEffects: true
   property bool selectedDisableMouse: false
   property bool selectedDisableParallax: false
+  property bool applyWallpaperColorsOnApply: false
+  property bool applyingWallpaperColors: false
   property bool extraPropertiesEditorEnabled: true
   property bool loadingWallpaperProperties: false
   property string wallpaperPropertyError: ""
@@ -57,6 +59,7 @@ ColumnLayout {
   signal selectedDisableMouseRequested(bool value)
   signal selectedDisableParallaxRequested(bool value)
   signal workshopLinkRequested(string url)
+  signal applyWallpaperColorsOnApplyRequested(bool value)
 
   Layout.preferredWidth: 340 * Style.uiScaleRatio
   Layout.maximumWidth: 340 * Style.uiScaleRatio
@@ -114,6 +117,8 @@ ColumnLayout {
           selectedAudioReactiveEffects: root.selectedAudioReactiveEffects
           selectedDisableMouse: root.selectedDisableMouse
           selectedDisableParallax: root.selectedDisableParallax
+          applyWallpaperColorsOnApply: root.applyWallpaperColorsOnApply
+          applyingWallpaperColors: root.applyingWallpaperColors
           extraPropertiesEditorEnabled: root.extraPropertiesEditorEnabled
           loadingWallpaperProperties: root.loadingWallpaperProperties
           wallpaperPropertyError: root.wallpaperPropertyError
@@ -136,6 +141,7 @@ ColumnLayout {
           onSelectedAudioReactiveEffectsRequested: value => root.selectedAudioReactiveEffectsRequested(value)
           onSelectedDisableMouseRequested: value => root.selectedDisableMouseRequested(value)
           onSelectedDisableParallaxRequested: value => root.selectedDisableParallaxRequested(value)
+          onApplyWallpaperColorsOnApplyRequested: value => root.applyWallpaperColorsOnApplyRequested(value)
         }
       }
     }
