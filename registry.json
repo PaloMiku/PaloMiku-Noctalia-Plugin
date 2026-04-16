@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-11T23:35:15+08:00",
+  "updatedAt": "2026-04-16T19:52:03+08:00",
   "plugins": [
     {
       "id": "linux-wallpaperengine-controller",
@@ -17,7 +17,7 @@
         "Panel",
         "Theming"
       ],
-      "lastUpdated": "2026-04-11T23:35:15+08:00"
+      "lastUpdated": "2026-04-16T19:52:03+08:00"
     },
     {
       "id": "process-reporter",
