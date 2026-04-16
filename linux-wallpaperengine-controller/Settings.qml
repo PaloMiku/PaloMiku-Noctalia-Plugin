@@ -37,7 +37,7 @@ ColumnLayout {
   property bool refreshingCacheSize: false
   property bool clearingCache: false
   property string cacheSizeLabel: pluginApi?.tr("settings.cache.sizeUnknown")
-  readonly property string pluginCacheDir: Settings.cacheDir + "linux-wallpaperengine-controller"
+  readonly property string pluginCacheDir: Settings.cacheDir + "plugins/linux-wallpaperengine-controller"
 
   spacing: Style.marginL
 

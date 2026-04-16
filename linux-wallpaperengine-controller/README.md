@@ -55,4 +55,4 @@ qs ipc call plugin:linux-wallpaperengine-controller reload
 
 - This plugin does not bundle the wallpaper engine or any wallpapers. It works by calling your locally installed `linux-wallpaperengine` and using Wallpaper Engine workshop wallpapers you have already downloaded.
 - If no wallpaper matches the current search or filters, the panel will show a filtered empty state instead of the generic source-folder message.
-- Color screenshot cache files are stored under `~/.cache/noctalia/linux-wallpaperengine-controller/` and are reused per display/wallpaper when possible.
+- Color screenshot cache files are stored under `~/.cache/noctalia/plugins/linux-wallpaperengine-controller/` and are reused per display/wallpaper when possible.

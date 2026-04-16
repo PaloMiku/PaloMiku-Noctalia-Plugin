@@ -17,7 +17,7 @@ function screenshotPathForWallpaper(cacheDir, wallpaperId, screenName) {
     : "";
   const fileId = sanitizeCachePathSegment(wallpaperId, "wallpaper");
   const screenId = screenCacheKey(screenName);
-  return cacheRoot + "linux-wallpaperengine-controller/" + screenId + "-" + fileId + "-theme-shot.png";
+  return cacheRoot + "plugins/linux-wallpaperengine-controller/" + screenId + "-" + fileId + "-theme-shot.png";
 }
 
 function cachedScreenshotEntry(entries, screenName) {
